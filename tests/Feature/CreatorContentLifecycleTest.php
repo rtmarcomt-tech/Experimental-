@@ -19,6 +19,7 @@ class CreatorContentLifecycleTest extends TestCase
             'name' => 'Creator',
             'email' => 'lifecycle-creator@example.test',
             'password' => 'password-long-enough',
+            'account_type' => 'creator',
             'account_status' => 'active',
         ]);
         $profile = CreatorProfile::create([
@@ -57,12 +58,14 @@ class CreatorContentLifecycleTest extends TestCase
             'name' => 'Owner',
             'email' => 'lifecycle-owner@example.test',
             'password' => 'password-long-enough',
+            'account_type' => 'creator',
             'account_status' => 'active',
         ]);
         $other = User::create([
             'name' => 'Other',
             'email' => 'lifecycle-other@example.test',
             'password' => 'password-long-enough',
+            'account_type' => 'creator',
             'account_status' => 'active',
         ]);
         $profile = CreatorProfile::create([
@@ -101,6 +104,7 @@ class CreatorContentLifecycleTest extends TestCase
             'name' => 'Suspended creator',
             'email' => 'lifecycle-suspended@example.test',
             'password' => 'password-long-enough',
+            'account_type' => 'creator',
             'account_status' => 'suspended',
         ]);
         $profile = CreatorProfile::create([
@@ -124,6 +128,7 @@ class CreatorContentLifecycleTest extends TestCase
             'name' => 'Buyer',
             'email' => 'lifecycle-buyer@example.test',
             'password' => 'password-long-enough',
+            'account_type' => 'user',
             'account_status' => 'active',
         ]);
 
@@ -140,6 +145,7 @@ class CreatorContentLifecycleTest extends TestCase
             'name' => 'Paid creator',
             'email' => 'lifecycle-paid@example.test',
             'password' => 'password-long-enough',
+            'account_type' => 'creator',
             'account_status' => 'active',
         ]);
         $profile = CreatorProfile::create([
@@ -164,6 +170,7 @@ class CreatorContentLifecycleTest extends TestCase
             'name' => 'Paid buyer',
             'email' => 'lifecycle-paid-buyer@example.test',
             'password' => 'password-long-enough',
+            'account_type' => 'user',
             'account_status' => 'active',
         ]);
 
