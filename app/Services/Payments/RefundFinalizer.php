@@ -30,10 +30,10 @@ class RefundFinalizer
 
             $order = Order::where('order_reference', $payment->order_reference)->firstOrFail();
             $item = $order->item()->firstOrFail();
-            $completedBefore = PaymentRefund::where('payment_transaction_id', $payment->id)
+            $completedQuery = PaymentRefund::where('payment_transaction_id', $payment->id)
                 ->where('status', 'completed')
-                ->whereKeyNot($lockedRefund->id)
-                ->sum('gross_minor');
+                ->where('id', '<>', $lockedRefund->id);
+            $completedBefore = (int) (clone $completedQuery)->sum('gross_minor');
 
             if ($completedBefore + $grossMinor > $payment->gross_minor) {
                 throw new RuntimeException('Cumulative refunds cannot exceed the captured payment.');
@@ -43,10 +43,7 @@ class RefundFinalizer
                 (($completedBefore + $grossMinor) * $item->creator_net_minor) + intdiv($payment->gross_minor, 2),
                 $payment->gross_minor
             );
-            $creatorAlreadyReversed = PaymentRefund::where('payment_transaction_id', $payment->id)
-                ->where('status', 'completed')
-                ->whereKeyNot($lockedRefund->id)
-                ->sum('creator_reversal_minor');
+            $creatorAlreadyReversed = (int) (clone $completedQuery)->sum('creator_reversal_minor');
             $creatorReversal = $cumulativeCreatorTarget - $creatorAlreadyReversed;
 
             if ($creatorReversal < 0 || $creatorReversal > $item->creator_net_minor - $creatorAlreadyReversed) {
@@ -89,11 +86,10 @@ class RefundFinalizer
                 }
             }
 
-            $platformReversal = $grossMinor - $creatorReversal;
             $lockedRefund->update([
                 'provider_refund_id' => $providerRefundId,
                 'creator_reversal_minor' => $creatorReversal,
-                'platform_reversal_minor' => $platformReversal,
+                'platform_reversal_minor' => $grossMinor - $creatorReversal,
                 'status' => 'completed',
                 'completed_at' => now(),
             ]);
