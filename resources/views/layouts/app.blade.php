@@ -9,7 +9,7 @@
 </style>
 </head>
 <body>
-<header><a class="brand" href="{{ route('home') }}">marketplace<small>DIGITAL CREATOR MARKETPLACE</small></a><nav class="nav"><a href="{{ route('home') }}">Explorar</a>@auth<a href="{{ route('dashboard') }}">A minha área</a><form method="post" action="{{ route('logout') }}" style="display:inline">@csrf<button class="btn secondary" style="padding:8px 12px">Sair</button></form>@else<a href="{{ route('login') }}">Entrar</a><a class="btn" href="{{ route('register') }}" style="padding:9px 14px">Criar conta</a>@endauth</nav></header>
+<header><a class="brand" href="{{ route('home') }}">marketplace<small>DIGITAL CREATOR MARKETPLACE</small></a><nav class="nav"><a href="{{ route('home') }}">Explorar</a>@auth<a href="{{ route('dashboard') }}">A minha área</a><a href="{{ route('purchases.index') }}">Compras</a><form method="post" action="{{ route('logout') }}" style="display:inline">@csrf<button class="btn secondary" style="padding:8px 12px">Sair</button></form>@else<a href="{{ route('login') }}">Entrar</a><a class="btn" href="{{ route('register') }}" style="padding:9px 14px">Criar conta</a>@endauth</nav></header>
 <main>@if(session('success'))<div class="wrap notice success">{{ session('success') }}</div>@endif @if($errors->any())<div class="wrap notice error">@foreach($errors->all() as $error)<div>{{ $error }}</div>@endforeach</div>@endif @yield('content')</main>
 <footer><div class="wrap row"><span>marketplace — Um espaço para descobrir e apoiar criadores independentes.</span><span>Fotografia · Vídeo · Cultura visual</span></div></footer>
 </body></html>
