@@ -85,7 +85,7 @@ Calculate reconciled available balance -> enforce minimum and account checks -> 
 - Upload metadata records MIME type, byte size and SHA-256 checksum.
 - Creators can list, inspect and update only their own drafts.
 - Pending, rejected or suspended creators cannot upload or manage sellable media.
-- New uploads remain drafts. Public publication is deliberately not enabled until preview generation, rights declaration and download entitlement controls are in place.
+- New uploads remain drafts. Publication requires a separately uploaded preview image and an accepted rights declaration (owner, licensed, or authorized). The public catalogue exposes only published metadata and preview images; original files remain private and are not exposed by the catalogue.
 
 ## Implemented in current bootstrap
 - Laravel application skeleton and configuration.
