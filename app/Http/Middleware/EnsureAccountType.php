@@ -12,7 +12,7 @@ class EnsureAccountType
     {
         $user = $request->user();
 
-        abort_unless($user && ($user->is_admin || $user->account_type === $type), 403, 'This account type cannot access this area.');
+        abort_unless($user && ($user->is_admin || $user->account_type === $type || ($type === 'creator' && $user->creatorProfile()->exists())), 403, 'This account type cannot access this area.');
 
         return $next($request);
     }
