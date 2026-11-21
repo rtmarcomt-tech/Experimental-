@@ -136,20 +136,51 @@ class MarketplaceController extends Controller
         if ($user->is_admin) {
             $pendingCases = \App\Models\CreatorVerificationCase::with(['creatorProfile.user','documents'])
                 ->where('status','submitted')->oldest('submitted_at')->get();
+            $captured = Order::query()->where('status', 'captured');
             $stats = [
                 'creators' => CreatorProfile::count(),
                 'pending' => CreatorProfile::where('status','pending')->count(),
                 'published' => DigitalMedia::where('status','published')->count(),
                 'buyers' => User::where('is_admin',false)->count(),
+                'orders' => Order::count(),
+                'captured' => (clone $captured)->count(),
+                'gross_minor' => (int) (clone $captured)->sum('gross_minor'),
+                'commission_minor' => (int) OrderItem::query()->join('orders', 'orders.id', '=', 'order_items.order_id')->where('orders.status', 'captured')->sum('order_items.commission_minor'),
+                'held_minor' => (int) FundHold::where('status', 'pending')->sum('amount_minor'),
             ];
-            return view('marketplace.admin', compact('pendingCases','stats'));
+            $recentOrders = Order::query()->with(['buyer:id,name,email', 'item:id,order_id,title_snapshot,creator_profile_id', 'item.creatorProfile:id,public_name'])
+                ->latest()->limit(12)->get();
+            return view('marketplace.admin', compact('pendingCases','stats','recentOrders'));
         }
         $profile = $user->creatorProfile;
         $media = $profile ? $profile->media()->with('assets')->latest()->get() : collect();
         $library = MediaAccessGrant::where('buyer_id',$user->id)->whereNull('revoked_at')
             ->with('digitalMedia.creatorProfile')->latest('granted_at')->get();
         $creatorStats = ['sales' => 0, 'gross_minor' => 0, 'net_minor' => 0];
+        $creatorFinance = [
+            'pending_minor' => 0,
+            'available_minor' => 0,
+            'held_minor' => 0,
+            'currencies' => [],
+        ];
         if ($profile && $profile->status === 'approved') {
+            $balances = CreatorLedgerAccount::query()
+                ->leftJoin('creator_ledger_entries', 'creator_ledger_entries.ledger_account_id', '=', 'creator_ledger_accounts.id')
+                ->where('creator_ledger_accounts.creator_profile_id', $profile->id)
+                ->groupBy('creator_ledger_accounts.account_type', 'creator_ledger_accounts.currency')
+                ->selectRaw('creator_ledger_accounts.account_type, creator_ledger_accounts.currency, COALESCE(SUM(creator_ledger_entries.amount_minor), 0) as balance_minor')
+                ->get();
+            foreach ($balances as $balance) {
+                $creatorFinance['currencies'][$balance->currency][$balance->account_type] = (int) $balance->balance_minor;
+            }
+            $creatorFinance['pending_minor'] = (int) $balances->where('account_type', 'pending')->sum('balance_minor');
+            $creatorFinance['available_minor'] = (int) $balances->where('account_type', 'available')->sum('balance_minor');
+            $creatorFinance['held_minor'] = (int) FundHold::query()
+                ->join('creator_ledger_entries', 'creator_ledger_entries.id', '=', 'fund_holds.ledger_entry_id')
+                ->join('creator_ledger_accounts', 'creator_ledger_accounts.id', '=', 'creator_ledger_entries.ledger_account_id')
+                ->where('creator_ledger_accounts.creator_profile_id', $profile->id)
+                ->where('fund_holds.status', 'pending')
+                ->sum('fund_holds.amount_minor');
             $totals = OrderItem::query()
                 ->join('orders', 'orders.id', '=', 'order_items.order_id')
                 ->where('order_items.creator_profile_id', $profile->id)
@@ -162,7 +193,7 @@ class MarketplaceController extends Controller
                 'net_minor' => (int) $totals->net_minor,
             ];
         }
-        return view('marketplace.dashboard', compact('profile','media','library','creatorStats'));
+        return view('marketplace.dashboard', compact('profile','media','library','creatorStats','creatorFinance'));
     }
 
     public function purchaseHistory(Request $request)
