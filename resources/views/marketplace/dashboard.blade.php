@@ -42,6 +42,30 @@
                 <p class="muted" style="margin-top:14px">O saldo disponível só poderá ser solicitado para pagamento quando o sistema de levantamentos estiver ativo e forem cumpridas as condições da plataforma.</p>
             </div>
             <p style="margin-top:14px"><a class="btn secondary" href="{{ route('creator.show',$profile->slug) }}">Ver perfil público</a></p>
+            <div class="section-head" style="margin-top:34px">
+                <div><div class="eyebrow">Atividade comercial</div><h2>Vendas recentes</h2></div>
+                <span class="muted">Últimas 20 vendas confirmadas</span>
+            </div>
+            @if($creatorSales->count())
+                <div class="panel" style="padding:0;overflow:auto">
+                    <table class="table">
+                        <thead><tr><th>Pedido</th><th>Conteúdo</th><th>Data</th><th>Valor</th><th>Valor líquido</th></tr></thead>
+                        <tbody>
+                        @foreach($creatorSales as $sale)
+                            <tr>
+                                <td>{{ $sale->order?->order_reference ?? '—' }}</td>
+                                <td>{{ $sale->title_snapshot }}</td>
+                                <td>{{ $sale->created_at?->format('d/m/Y H:i') }}</td>
+                                <td>{{ number_format($sale->unit_price_minor/100,2,',','.') }} {{ $sale->currency }}</td>
+                                <td><strong>{{ number_format($sale->creator_net_minor/100,2,',','.') }} {{ $sale->currency }}</strong></td>
+                            </tr>
+                        @endforeach
+                        </tbody>
+                    </table>
+                </div>
+            @else
+                <div class="empty">Ainda não existem vendas confirmadas.</div>
+            @endif
             <h3 style="font:22px Georgia,serif;margin-top:28px">Identidade pública</h3>
             <form method="post" action="{{ route('creator.profile.update') }}" enctype="multipart/form-data">
                 @csrf
