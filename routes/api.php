@@ -7,13 +7,16 @@ use App\Http\Controllers\Api\CreatorMediaController;
 use App\Http\Controllers\Api\CreatorMediaPublicationController;
 use App\Http\Controllers\Api\CreatorVerificationDocumentController;
 use App\Http\Controllers\Api\OrderCheckoutController;
+use App\Http\Controllers\Api\PayPalWebhookController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/health', fn () => response()->json([
     'status' => 'ok',
     'application' => 'digital-creator-marketplace',
-    'version' => '0.6.0',
+    'version' => '0.7.0',
 ]));
+
+Route::post('/webhooks/paypal', PayPalWebhookController::class)->middleware('throttle:60,1');
 
 Route::get('/media', [CreatorMediaPublicationController::class, 'publicIndex']);
 Route::get('/media/{slug}/preview', [CreatorMediaPublicationController::class, 'publicPreview']);
