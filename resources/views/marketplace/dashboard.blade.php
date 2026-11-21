@@ -27,7 +27,9 @@
             <h3 style="font:22px Georgia,serif;margin-top:28px">Identidade pública</h3>
             <form method="post" action="{{ route('creator.profile.update') }}" enctype="multipart/form-data">
                 @csrf
+                @if($profile->profile_photo_path)<p><img src="{{ \Illuminate\Support\Facades\Storage::disk('public')->url($profile->profile_photo_path) }}" alt="Fotografia de perfil atual" style="width:76px;height:76px;border-radius:50%;object-fit:cover"></p>@endif
                 <div class="field"><label>Fotografia de perfil</label><input type="file" name="profile_photo" accept=".jpg,.jpeg,.png,.webp"></div>
+                <div class="field"><label>Nome público</label><input name="public_name" maxlength="120" required value="{{ old('public_name',$profile->public_name) }}"></div>
                 <div class="field"><label>Apresentação curta</label><input name="presentation" maxlength="180" value="{{ old('presentation',$profile->presentation) }}" placeholder="Uma frase de apresentação"></div>
                 <div class="field"><label>Biografia curta</label><textarea name="bio" maxlength="280">{{ old('bio',$profile->bio) }}</textarea></div>
                 <button class="btn secondary">Guardar identidade pública</button>
