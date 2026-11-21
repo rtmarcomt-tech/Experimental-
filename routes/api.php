@@ -1,16 +1,16 @@
 <?php
 
-use App\\Http\\Controllers\\Api\\AdminCreatorVerificationController;
-use App\\Http\\Controllers\\Api\\AdminPaymentRefundController;
-use App\\Http\\Controllers\\Api\\AuthController;
-use App\\Http\\Controllers\\Api\\CreatorApplicationController;
-use App\\Http\\Controllers\\Api\\CreatorMediaController;
-use App\\Http\\Controllers\\Api\\CreatorMediaPublicationController;
-use App\\Http\\Controllers\\Api\\CreatorVerificationDocumentController;
-use App\\Http\\Controllers\\Api\\MediaLibraryController;
-use App\\Http\\Controllers\\Api\\OrderCheckoutController;
-use App\\Http\\Controllers\\Api\\PayPalWebhookController;
-use Illuminate\\Support\\Facades\\Route;
+use App\Http\Controllers\Api\AdminCreatorVerificationController;
+use App\Http\Controllers\Api\AdminPaymentRefundController;
+use App\Http\Controllers\Api\AuthController;
+use App\Http\Controllers\Api\CreatorApplicationController;
+use App\Http\Controllers\Api\CreatorMediaController;
+use App\Http\Controllers\Api\CreatorMediaPublicationController;
+use App\Http\Controllers\Api\CreatorVerificationDocumentController;
+use App\Http\Controllers\Api\MediaLibraryController;
+use App\Http\Controllers\Api\OrderCheckoutController;
+use App\Http\Controllers\Api\PayPalWebhookController;
+use Illuminate\Support\Facades\Route;
 
 Route::get('/health', fn () => response()->json([
     'status' => 'ok',
