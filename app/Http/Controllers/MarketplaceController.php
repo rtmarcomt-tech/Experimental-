@@ -173,6 +173,7 @@ class MarketplaceController extends Controller
             'pending_minor' => 0,
             'available_minor' => 0,
             'held_minor' => 0,
+            'payout_reserved_minor' => 0,
             'currencies' => [],
         ];
         if ($profile && $profile->status === 'approved') {
@@ -187,6 +188,7 @@ class MarketplaceController extends Controller
             }
             $creatorFinance['pending_minor'] = (int) $balances->where('account_type', 'pending')->sum('balance_minor');
             $creatorFinance['available_minor'] = (int) $balances->where('account_type', 'available')->sum('balance_minor');
+            $creatorFinance['payout_reserved_minor'] = (int) $balances->where('account_type', 'payout_reserved')->sum('balance_minor');
             $creatorFinance['held_minor'] = (int) FundHold::query()
                 ->join('creator_ledger_entries', 'creator_ledger_entries.id', '=', 'fund_holds.ledger_entry_id')
                 ->join('creator_ledger_accounts', 'creator_ledger_accounts.id', '=', 'creator_ledger_entries.ledger_account_id')
