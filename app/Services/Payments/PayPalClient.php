@@ -78,7 +78,7 @@ class PayPalClient
             ->withToken($this->accessToken())
             ->withHeaders(['PayPal-Request-Id' => $idempotencyKey])
             ->acceptJson()
-            ->post('/v2/checkout/orders/'.$paypalOrderId.'/capture', (object) [])
+            ->post('/v2/checkout/orders/'.$paypalOrderId.'/capture')
             ->throw()
             ->json();
     }
