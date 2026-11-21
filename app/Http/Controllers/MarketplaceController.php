@@ -115,14 +115,14 @@ class MarketplaceController extends Controller
             'name' => ['required','string','max:120'],
             'email' => ['required','email','max:255','unique:users,email'],
             'password' => ['required','string','min:10','confirmed'],
-            'account_type' => ['required','in:user,creator'],\n            'account_type' => ['required','in:user,creator'],
+            'account_type' => ['required','in:user,creator'],
         ]);
         $user = User::create([
             'name' => $data['name'],
             'email' => $data['email'],
             'password' => Hash::make($data['password']),
             'account_status' => 'active',
-            'account_type' => $data['account_type'],\n            'account_type' => $data['account_type'],
+            'account_type' => $data['account_type'],
         ]);
         Auth::login($user);
         $request->session()->regenerate();
@@ -165,7 +165,12 @@ class MarketplaceController extends Controller
                 ->latest()->limit(12)->get();
             return view('marketplace.admin', compact('pendingCases','stats','recentOrders','adminPayouts','adminPayoutsOpen'));
         }
-        $profile = $user->creatorProfile;\n        if ($user->account_type === 'user' && ! $profile) {\n            $library = MediaAccessGrant::where('buyer_id', $user->id)->whereNull('revoked_at')\n                ->with('digitalMedia.creatorProfile')->latest('granted_at')->get();\n            return view('marketplace.buyer-dashboard', compact('library'));\n        }\n        $media = $profile ? $profile->media()->with('assets')->latest()->get() : collect();
+        $profile = $user->creatorProfile;
+        if ($user->account_type === 'user' && ! $profile) {
+            $library = MediaAccessGrant::where('buyer_id', $user->id)->whereNull('revoked_at')
+                ->with('digitalMedia.creatorProfile')->latest('granted_at')->get();
+            return view('marketplace.buyer-dashboard', compact('library'));
+        }\n        $media = $profile ? $profile->media()->with('assets')->latest()->get() : collect();
         $creatorPayouts = $profile ? CreatorPayout::where('creator_profile_id', $profile->id)->latest('requested_at')->limit(10)->get() : collect();
         $library = MediaAccessGrant::where('buyer_id',$user->id)->whereNull('revoked_at')
             ->with('digitalMedia.creatorProfile')->latest('granted_at')->get();
