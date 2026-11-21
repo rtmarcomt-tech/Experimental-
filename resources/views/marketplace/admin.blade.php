@@ -56,6 +56,41 @@
 
     <section>
         <div class="section-head">
+            <div><div class="eyebrow">Liquidação</div><h2>Pedidos de pagamento</h2></div>
+            <span class="muted">{{ $adminPayouts->count() }} em aberto</span>
+        </div>
+        @if($adminPayouts->count())
+            <div class="panel" style="padding:0;overflow:auto">
+                <table class="table">
+                    <thead><tr><th>Criador</th><th>Destino PayPal</th><th>Montante</th><th>Pedido</th><th>Estado</th><th>Ação</th></tr></thead>
+                    <tbody>
+                    @foreach($adminPayouts as $payout)
+                        <tr>
+                            <td>{{ $payout->creatorProfile?->public_name ?? '—' }}</td>
+                            <td>{{ $payout->recipient_email }}</td>
+                            <td>{{ number_format($payout->amount_minor/100,2,',','.') }} {{ $payout->currency }}</td>
+                            <td>{{ $payout->requested_at?->format('d/m/Y H:i') }}</td>
+                            <td>{{ match($payout->status) {'requested'=>'Por enviar','processing'=>'Em processamento','submission_unknown'=>'Envio por confirmar',default=>$payout->status} }}</td>
+                            <td>
+                                @if(in_array($payout->status,['requested','submission_unknown'],true))
+                                    <form method="post" action="{{ route('admin.payouts.submit',$payout->id) }}">@csrf<button class="btn accent">Enviar ao PayPal</button></form>
+                                @elseif($payout->status==='processing')
+                                    <form method="post" action="{{ route('admin.payouts.reconcile',$payout->id) }}">@csrf<button class="btn secondary">Consultar estado</button></form>
+                                @endif
+                            </td>
+                        </tr>
+                        @if($payout->failure_reason)<tr><td colspan="6" class="muted">{{ $payout->failure_reason }}</td></tr>@endif
+                    @endforeach
+                    </tbody>
+                </table>
+            </div>
+        @else
+            <div class="empty">Não existem pedidos de pagamento em aberto.</div>
+        @endif
+    </section>
+
+    <section>
+        <div class="section-head">
             <div><div class="eyebrow">Onboarding</div><h2>Candidaturas de criadores</h2></div>
             <span class="muted">{{ $pendingCases->count() }} por analisar</span>
         </div>
