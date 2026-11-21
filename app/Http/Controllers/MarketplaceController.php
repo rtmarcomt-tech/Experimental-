@@ -138,7 +138,8 @@ class MarketplaceController extends Controller
     {
         $user = $request->user();
         if ($user->is_admin) {
-            $adminPayouts = CreatorPayout::query()->with('creatorProfile:id,public_name')->whereIn('status', ['requested','processing','submission_unknown'])->latest('requested_at')->limit(30)->get();
+            $adminPayouts = CreatorPayout::query()->with('creatorProfile:id,public_name')->latest('requested_at')->limit(30)->get();
+            $adminPayoutsOpen = CreatorPayout::whereIn('status', ['requested','processing','submission_unknown'])->count();
             $pendingCases = \App\Models\CreatorVerificationCase::with(['creatorProfile.user','documents'])
                 ->where('status','submitted')->oldest('submitted_at')->get();
             $captured = Order::query()->where('status', 'captured');
@@ -155,7 +156,7 @@ class MarketplaceController extends Controller
             ];
             $recentOrders = Order::query()->with(['buyer:id,name,email', 'item:id,order_id,title_snapshot,creator_profile_id', 'item.creatorProfile:id,public_name'])
                 ->latest()->limit(12)->get();
-            return view('marketplace.admin', compact('pendingCases','stats','recentOrders','adminPayouts'));
+            return view('marketplace.admin', compact('pendingCases','stats','recentOrders','adminPayouts','adminPayoutsOpen'));
         }
         $profile = $user->creatorProfile;
         $media = $profile ? $profile->media()->with('assets')->latest()->get() : collect();
