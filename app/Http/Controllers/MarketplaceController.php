@@ -62,6 +62,7 @@ class MarketplaceController extends Controller
         abort_unless($profile && $profile->canSell(), 403, 'A conta de criador ainda não está aprovada.');
 
         $data = $request->validate([
+            'public_name' => ['required', 'string', 'min:2', 'max:120'],
             'presentation' => ['nullable', 'string', 'max:180'],
             'bio' => ['nullable', 'string', 'max:280'],
             'profile_photo' => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp', 'max:5120'],
