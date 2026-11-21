@@ -1,16 +1,16 @@
 <?php
 
-namespace Tests\\Feature;
+namespace Tests\Feature;
 
-use App\\Models\\CreatorProfile;
-use App\\Models\\DigitalMedia;
-use App\\Models\\MediaAccessGrant;
-use App\\Models\\Order;
-use App\\Models\\OrderItem;
-use App\\Models\\PaymentTransaction;
-use App\\Models\\User;
-use Illuminate\\Foundation\\Testing\\RefreshDatabase;
-use Tests\\TestCase;
+use App\Models\CreatorProfile;
+use App\Models\DigitalMedia;
+use App\Models\MediaAccessGrant;
+use App\Models\Order;
+use App\Models\OrderItem;
+use App\Models\PaymentTransaction;
+use App\Models\User;
+use Illuminate\Foundation\Testing\RefreshDatabase;
+use Tests\TestCase;
 
 class PurchaseHistoryTest extends TestCase
 {
