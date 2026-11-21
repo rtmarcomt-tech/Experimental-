@@ -1,16 +1,16 @@
 <?php
 
-namespace App\\Http\\Controllers\\Api;
+namespace App\Http\Controllers\Api;
 
-use App\\Http\\Controllers\\Controller;
-use App\\Models\\Order;
-use App\\Models\\PaymentRefund;
-use App\\Services\\Payments\\PayPalClient;
-use App\\Services\\Payments\\RefundFinalizer;
-use Illuminate\\Http\\JsonResponse;
-use Illuminate\\Http\\Request;
-use Illuminate\\Support\\Facades\\DB;
-use Illuminate\\Validation\\ValidationException;
+use App\Http\Controllers\Controller;
+use App\Models\Order;
+use App\Models\PaymentRefund;
+use App\Services\Payments\PayPalClient;
+use App\Services\Payments\RefundFinalizer;
+use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Validation\ValidationException;
 use Throwable;
 
 class AdminPaymentRefundController extends Controller
@@ -74,7 +74,7 @@ class AdminPaymentRefundController extends Controller
             $providerId = data_get($response, 'id');
             $providerStatus = strtoupper((string) data_get($response, 'status'));
             if (! is_string($providerId) || $providerId === '') {
-                throw new \\RuntimeException('PayPal did not return a refund identifier.');
+                throw new \RuntimeException('PayPal did not return a refund identifier.');
             }
 
             $refund->update([
@@ -90,7 +90,7 @@ class AdminPaymentRefundController extends Controller
                     (string) data_get($response, 'amount.currency_code', $refund->currency)
                 );
             } elseif ($providerStatus !== 'PENDING') {
-                throw new \\RuntimeException('PayPal did not complete the refund.');
+                throw new \RuntimeException('PayPal did not complete the refund.');
             }
 
             return response()->json($this->refundPayload($refund->fresh()), 202);
