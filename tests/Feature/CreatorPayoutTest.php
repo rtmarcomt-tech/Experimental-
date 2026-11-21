@@ -75,6 +75,31 @@ class CreatorPayoutTest extends TestCase
         $this->assertSame(0, (int) CreatorLedgerEntry::where('ledger_account_id', $reserved->id)->sum('amount_minor'));
     }
 
+    public function test_returned_paypal_payout_restores_available_balance_once_after_payment(): void
+    {
+        [$user, $profile] = $this->creatorWithAvailableBalance(12500);
+        $payout = $this->requestedPayout($user, $profile, 12500);
+        $payout->update([
+            'status' => 'paid',
+            'paypal_batch_id' => 'BATCH-RETURNED',
+            'paypal_item_id' => 'ITEM-RETURNED',
+        ]);
+
+        $finalizer = app(CreatorPayoutFinalizer::class);
+        $finalizer->returnFunds($payout, 'BATCH-RETURNED', 'ITEM-RETURNED', 'PayPal returned the payout');
+        $finalizer->returnFunds($payout->fresh(), 'BATCH-RETURNED', 'ITEM-RETURNED', 'Duplicate return webhook');
+
+        $available = CreatorLedgerAccount::where('creator_profile_id', $profile->id)
+            ->where('account_type', 'available')->firstOrFail();
+        $reserved = CreatorLedgerAccount::where('creator_profile_id', $profile->id)
+            ->where('account_type', 'payout_reserved')->firstOrFail();
+
+        $this->assertSame('returned', $payout->fresh()->status);
+        $this->assertSame(12500, (int) CreatorLedgerEntry::where('ledger_account_id', $available->id)->sum('amount_minor'));
+        $this->assertSame(0, (int) CreatorLedgerEntry::where('ledger_account_id', $reserved->id)->sum('amount_minor'));
+        $this->assertSame(1, CreatorLedgerEntry::where('idempotency_key', 'creator-payout-'.$payout->id.'-return-available')->count());
+    }
+
     public function test_creator_cannot_request_a_payout_below_the_configured_minimum(): void
     {
         Config::set('marketplace.payout_minimum_minor', 5000);
