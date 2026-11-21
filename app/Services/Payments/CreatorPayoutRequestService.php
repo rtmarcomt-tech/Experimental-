@@ -1,14 +1,14 @@
 <?php
 
-namespace App\\Services\\Payments;
+namespace App\Services\Payments;
 
-use App\\Models\\CreatorLedgerAccount;
-use App\\Models\\CreatorLedgerEntry;
-use App\\Models\\CreatorPayout;
-use App\\Models\\CreatorProfile;
-use Illuminate\\Support\\Facades\\DB;
-use Illuminate\\Support\\Str;
-use Illuminate\\Validation\\ValidationException;
+use App\Models\CreatorLedgerAccount;
+use App\Models\CreatorLedgerEntry;
+use App\Models\CreatorPayout;
+use App\Models\CreatorProfile;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Str;
+use Illuminate\Validation\ValidationException;
 
 class CreatorPayoutRequestService
 {
