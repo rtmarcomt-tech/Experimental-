@@ -85,7 +85,7 @@
                         <thead><tr><th>Data</th><th>Montante</th><th>Destino</th><th>Estado</th></tr></thead>
                         <tbody>
                         @foreach($creatorPayouts as $payout)
-                            <tr><td>{{ $payout->requested_at?->format('d/m/Y H:i') }}</td><td>{{ number_format($payout->amount_minor/100,2,',','.') }} {{ $payout->currency }}</td><td>{{ $payout->recipient_email }}</td><td>{{ match($payout->status) {'requested'=>'Em validação','processing'=>'Em processamento','submission_unknown'=>'A confirmar com PayPal','paid'=>'Pago','failed'=>'Falhou',default=>$payout->status} }}</td></tr>
+                            <tr><td>{{ $payout->requested_at?->format('d/m/Y H:i') }}</td><td>{{ number_format($payout->amount_minor/100,2,',','.') }} {{ $payout->currency }}</td><td>{{ $payout->recipient_email }}</td><td>{{ match($payout->status) {'requested'=>'Em validação','processing'=>'Em processamento','submission_unknown'=>'A confirmar com PayPal','paid'=>'Pago','returned'=>'Devolvido','failed'=>'Falhou',default=>$payout->status} }}</td></tr>
                         @endforeach
                         </tbody>
                     </table></div>
