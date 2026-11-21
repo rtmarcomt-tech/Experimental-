@@ -21,7 +21,6 @@ class CreatorOnboardingTest extends TestCase
     public function test_user_can_submit_creator_application_and_starts_pending(): void
     {
         $user = User::create(['name' => 'Creator One', 'email' => 'creator@example.test', 'password' => 'password-long-enough']);
-
         Sanctum::actingAs($user);
 
         $this->postJson('/api/creator/application', [
@@ -43,7 +42,6 @@ class CreatorOnboardingTest extends TestCase
         CreatorProfile::create([
             'user_id' => $user->id, 'public_name' => 'Creator Two', 'slug' => 'creator-two', 'status' => 'pending',
         ]);
-
         Sanctum::actingAs($user);
 
         $this->postJson('/api/creator/application', [
@@ -56,7 +54,8 @@ class CreatorOnboardingTest extends TestCase
     public function test_only_admin_can_approve_a_creator_and_approval_is_atomic(): void
     {
         $owner = User::create(['name' => 'Applicant', 'email' => 'applicant@example.test', 'password' => 'password-long-enough']);
-        $admin = User::create(['name' => 'Admin', 'email' => 'admin@example.test', 'password' => 'password-long-enough', 'is_admin' => true]);
+        $admin = User::create(['name' => 'Admin', 'email' => 'admin@example.test', 'password' => 'password-long-enough']);
+        $admin->forceFill(['is_admin' => true])->save();
         $profile = CreatorProfile::create([
             'user_id' => $owner->id, 'public_name' => 'Applicant', 'slug' => 'applicant', 'status' => 'pending',
         ]);
@@ -81,7 +80,8 @@ class CreatorOnboardingTest extends TestCase
     public function test_rejection_requires_reason_and_profile_stays_unapproved(): void
     {
         $owner = User::create(['name' => 'Applicant', 'email' => 'applicant3@example.test', 'password' => 'password-long-enough']);
-        $admin = User::create(['name' => 'Admin', 'email' => 'admin3@example.test', 'password' => 'password-long-enough', 'is_admin' => true]);
+        $admin = User::create(['name' => 'Admin', 'email' => 'admin3@example.test', 'password' => 'password-long-enough']);
+        $admin->forceFill(['is_admin' => true])->save();
         $profile = CreatorProfile::create([
             'user_id' => $owner->id, 'public_name' => 'Applicant', 'slug' => 'applicant-3', 'status' => 'pending',
         ]);
@@ -96,5 +96,18 @@ class CreatorOnboardingTest extends TestCase
         $this->patchJson('/api/admin/creator-verification-cases/'.$case->id, [
             'decision' => 'rejected', 'reason' => 'Verification documents incomplete.',
         ])->assertOk()->assertJsonPath('creator_profile.status', 'rejected');
+    }
+
+    public function test_registration_cannot_assign_admin_privileges(): void
+    {
+        $response = $this->postJson('/api/auth/register', [
+            'name' => 'New User',
+            'email' => 'new-user@example.test',
+            'password' => 'long-password-123',
+            'is_admin' => true,
+        ])->assertCreated();
+
+        $userId = $response->json('user.id');
+        $this->assertDatabaseHas('users', ['id' => $userId, 'is_admin' => false]);
     }
 }
