@@ -6,12 +6,13 @@ use App\Http\Controllers\Api\CreatorApplicationController;
 use App\Http\Controllers\Api\CreatorMediaController;
 use App\Http\Controllers\Api\CreatorMediaPublicationController;
 use App\Http\Controllers\Api\CreatorVerificationDocumentController;
+use App\Http\Controllers\Api\OrderCheckoutController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/health', fn () => response()->json([
     'status' => 'ok',
     'application' => 'digital-creator-marketplace',
-    'version' => '0.5.0',
+    'version' => '0.6.0',
 ]));
 
 Route::get('/media', [CreatorMediaPublicationController::class, 'publicIndex']);
@@ -33,6 +34,8 @@ Route::middleware('auth:sanctum')->group(function (): void {
     Route::post('/creator/media/{media}/rights', [CreatorMediaPublicationController::class, 'declareRights']);
     Route::post('/creator/media/{media}/preview', [CreatorMediaPublicationController::class, 'uploadPreview']);
     Route::post('/creator/media/{media}/publish', [CreatorMediaPublicationController::class, 'publish']);
+    Route::post('/media/{slug}/checkout', [OrderCheckoutController::class, 'create'])->middleware('throttle:10,1');
+    Route::post('/orders/{reference}/capture', [OrderCheckoutController::class, 'capture'])->middleware('throttle:10,1');
 });
 
 Route::prefix('admin')
