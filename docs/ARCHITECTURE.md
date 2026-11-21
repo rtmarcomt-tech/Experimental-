@@ -78,6 +78,15 @@ Calculate reconciled available balance -> enforce minimum and account checks -> 
 - The review decision and creator profile status are updated in one database transaction.
 - The public registration endpoint cannot set administrative privileges.
 
+## Creator media draft API
+
+- Approved creators can upload individual photo or video originals into private object storage.
+- Draft metadata supports free items or paid items with positive integer prices in minor currency units.
+- Upload metadata records MIME type, byte size and SHA-256 checksum.
+- Creators can list, inspect and update only their own drafts.
+- Pending, rejected or suspended creators cannot upload or manage sellable media.
+- New uploads remain drafts. Public publication is deliberately not enabled until preview generation, rights declaration and download entitlement controls are in place.
+
 ## Implemented in current bootstrap
 - Laravel application skeleton and configuration.
 - User, creator profile and verification case schema.
