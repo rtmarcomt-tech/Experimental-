@@ -33,6 +33,54 @@ class MarketplaceController extends Controller
         return view('marketplace.home', compact('items'));
     }
 
+    public function showCreator(string $slug)
+    {
+        $profile = CreatorProfile::query()
+            ->where('slug', $slug)
+            ->where('status', 'approved')
+            ->whereHas('user', fn ($query) => $query->where('account_status', 'active'))
+            ->firstOrFail();
+
+        $items = $profile->media()
+            ->where('status', 'published')
+            ->with(['assets' => fn ($query) => $query->where('purpose', 'preview')->latest('id')])
+            ->latest('published_at')
+            ->get();
+
+        $freeItems = $items->where('visibility', 'free')->values();
+        $paidItems = $items->where('visibility', 'paid')->values();
+        $profilePhotoUrl = $profile->profile_photo_path
+            ? Storage::disk('public')->url($profile->profile_photo_path)
+            : null;
+
+        return view('marketplace.creator', compact('profile', 'freeItems', 'paidItems', 'profilePhotoUrl'));
+    }
+
+    public function updateCreatorProfile(Request $request)
+    {
+        $profile = $request->user()->creatorProfile;
+        abort_unless($profile && $profile->canSell(), 403, 'A conta de criador ainda não está aprovada.');
+
+        $data = $request->validate([
+            'presentation' => ['nullable', 'string', 'max:180'],
+            'bio' => ['nullable', 'string', 'max:280'],
+            'profile_photo' => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp', 'max:5120'],
+        ]);
+
+        if ($request->hasFile('profile_photo')) {
+            $newPath = $request->file('profile_photo')->store('creator-profiles/'.$profile->id, 'public');
+            if ($profile->profile_photo_path) {
+                Storage::disk('public')->delete($profile->profile_photo_path);
+            }
+            $data['profile_photo_path'] = $newPath;
+        }
+
+        unset($data['profile_photo']);
+        $profile->update($data);
+
+        return redirect()->route('creator.show', $profile->slug)->with('success', 'Perfil público atualizado.');
+    }
+
     public function showMedia(string $slug)
     {
         $media = DigitalMedia::where('slug', $slug)->where('status', 'published')
@@ -167,7 +215,7 @@ class MarketplaceController extends Controller
                     'type'=>$data['type'],'title'=>$data['title'],'slug'=>Str::slug($data['title']).'-'.Str::lower(Str::random(10)),
                     'description'=>$data['description'] ?? null,'visibility'=>$data['visibility'],
                     'price_minor'=>$data['visibility']==='paid'?(int) round(((float)$data['price_eur'])*100):null,
-                    'currency'=>'EUR','status'=>'published','published_at'=>now(),
+                    'currency'=>'EUR','status'=>'draft','published_at'=>null,
                 ]);
                 foreach ([['original',$original,$originalPath],['preview',$preview,$previewPath]] as [$purpose,$file,$path]) {
                     $media->assets()->create([
@@ -185,7 +233,48 @@ class MarketplaceController extends Controller
             Storage::disk('private')->delete([$originalPath,$previewPath]);
             throw $e;
         }
-        return redirect()->route('dashboard')->with('success','Conteúdo publicado no catálogo.');
+        return redirect()->route('dashboard')->with('success','Conteúdo guardado na tua biblioteca. Define a oferta e publica-o quando estiver pronto.');
+    }
+
+    public function updateMediaOffer(Request $request, int $media)
+    {
+        $profile = $request->user()->creatorProfile;
+        abort_unless($profile && $profile->canSell(), 403);
+        $item = $profile->media()->where('status', 'draft')->findOrFail($media);
+        $data = $request->validate([
+            'visibility' => ['required', 'in:free,paid'],
+            'price_eur' => ['required_if:visibility,paid', 'nullable', 'numeric', 'min:0.01', 'max:99999'],
+        ]);
+
+        $item->update([
+            'visibility' => $data['visibility'],
+            'price_minor' => $data['visibility'] === 'paid' ? (int) round(((float) $data['price_eur']) * 100) : null,
+        ]);
+
+        return redirect()->route('dashboard')->with('success', 'Oferta atualizada na tua biblioteca.');
+    }
+
+    public function publishMedia(Request $request, int $media)
+    {
+        $profile = $request->user()->creatorProfile;
+        abort_unless($profile && $profile->canSell(), 403);
+        $item = $profile->media()->where('status', 'draft')->findOrFail($media);
+
+        $hasOriginal = $item->assets()->where('purpose', 'original')->exists();
+        $hasPreview = $item->assets()->where('purpose', 'preview')->exists();
+        $hasRights = $item->rightsDeclarations()->exists();
+        $hasValidOffer = $item->visibility === 'free'
+            || ($item->visibility === 'paid' && $item->price_minor !== null && $item->price_minor > 0);
+
+        if (! $hasOriginal || ! $hasPreview || ! $hasRights || ! $hasValidOffer) {
+            throw ValidationException::withMessages([
+                'publication' => ['Para publicar, confirma a oferta e garante que existem ficheiro original, pré-visualização e declaração de direitos.'],
+            ]);
+        }
+
+        $item->update(['status' => 'published', 'published_at' => now()]);
+
+        return redirect()->route('creator.show', $profile->slug)->with('success', 'Conteúdo publicado no teu perfil.');
     }
 
     public function checkout(Request $request, string $slug, PayPalClient $paypal, CommissionCalculator $calculator)
