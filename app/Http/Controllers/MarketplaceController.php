@@ -187,4 +187,113 @@ class MarketplaceController extends Controller
         }
         return redirect()->route('dashboard')->with('success','Conteúdo publicado no catálogo.');
     }
+
+    public function checkout(Request $request, string $slug, PayPalClient $paypal, CommissionCalculator $calculator)
+    {
+        $request->headers->set('Idempotency-Key', (string) Str::uuid());
+        $response = app(OrderCheckoutController::class)->create($request, $slug, $paypal, $calculator);
+        $payload = $response->getData(true);
+        if ($response->getStatusCode() >= 400 || empty($payload['approval_url'])) {
+            return back()->withErrors(['checkout' => $payload['message'] ?? 'Não foi possível iniciar o pagamento.']);
+        }
+        return redirect()->away($payload['approval_url']);
+    }
+
+    public function paypalReturn(Request $request, PayPalClient $paypal, CaptureFinalizer $finalizer)
+    {
+        $token = $request->query('token');
+        abort_unless(is_string($token) && $token !== '', 400, 'Referência PayPal inválida.');
+        $order = Order::where('paypal_order_id', $token)->where('buyer_id', $request->user()->id)->firstOrFail();
+        $response = app(OrderCheckoutController::class)->capture($request, $order->order_reference, $paypal, $finalizer);
+        $payload = $response->getData(true);
+        if ($response->getStatusCode() === 200 && ($payload['status'] ?? null) === 'captured') {
+            return redirect()->route('dashboard')->with('success', 'Pagamento confirmado. O conteúdo já está disponível na tua biblioteca.');
+        }
+        return redirect()->route('dashboard')->withErrors(['checkout' => $payload['message'] ?? 'O pagamento ainda não foi confirmado. A biblioteca será atualizada após confirmação.']);
+    }
+
+    public function paypalCancel(Request $request)
+    {
+        $token = $request->query('token');
+        if (is_string($token) && $token !== '') {
+            Order::where('paypal_order_id', $token)->where('buyer_id', $request->user()->id)
+                ->where('status', 'awaiting_approval')->update(['status' => 'cancelled']);
+        }
+        return redirect()->route('home')->with('success', 'O checkout foi cancelado. Não foi efetuada qualquer compra.');
+    }
+
+    public function claimFree(Request $request, string $slug)
+    {
+        $media = DigitalMedia::where('slug', $slug)->where('status', 'published')->where('visibility', 'free')->firstOrFail();
+        DB::transaction(function () use ($request, $media) {
+            $grant = MediaAccessGrant::where('buyer_id', $request->user()->id)->where('digital_media_id', $media->id)->lockForUpdate()->first();
+            if ($grant) {
+                if ($grant->revoked_at) {
+                    $grant->update(['grant_type'=>'free','payment_transaction_id'=>null,'granted_at'=>now(),'revoked_at'=>null,'revocation_reason'=>null]);
+                }
+                return;
+            }
+            MediaAccessGrant::create(['buyer_id'=>$request->user()->id,'digital_media_id'=>$media->id,'grant_type'=>'free','granted_at'=>now()]);
+        });
+        return redirect()->route('dashboard')->with('success','Conteúdo adicionado à tua biblioteca.');
+    }
+
+    public function downloadLibrary(Request $request, int $media)
+    {
+        $grant = MediaAccessGrant::where('buyer_id',$request->user()->id)->where('digital_media_id',$media)
+            ->whereNull('revoked_at')->with('digitalMedia')->firstOrFail();
+        abort_unless($grant->digitalMedia && $grant->digitalMedia->status === 'published',404);
+        $asset = $grant->digitalMedia->assets()->where('purpose','original')->latest('id')->firstOrFail();
+        $disk = Storage::disk($asset->disk);
+        abort_unless($disk->exists($asset->object_key),503,'Ficheiro temporariamente indisponível.');
+        $key = (string) config('app.key');
+        MediaDownloadEvent::create([
+            'media_access_grant_id'=>$grant->id,'media_asset_id'=>$asset->id,'user_id'=>$request->user()->id,
+            'outcome'=>'issued','ip_hash'=>$request->ip()?hash_hmac('sha256',$request->ip(),$key):null,
+            'user_agent_hash'=>$request->userAgent()?hash_hmac('sha256',$request->userAgent(),$key):null,'issued_at'=>now(),
+        ]);
+        $extension = match ($asset->mime_type) {
+            'image/jpeg'=>'jpg','image/png'=>'png','image/webp'=>'webp',
+            'video/mp4'=>'mp4','video/quicktime'=>'mov','video/webm'=>'webm',default=>'bin'
+        };
+        return $disk->download($asset->object_key,Str::slug($grant->digitalMedia->title).'.'.$extension,[
+            'Cache-Control'=>'private, no-store','X-Content-Type-Options'=>'nosniff'
+        ]);
+    }
+
+    public function verificationDocument(int $document)
+    {
+        $doc = CreatorVerificationDocument::findOrFail($document);
+        $extension = match ($doc->mime_type) {
+            'application/pdf'=>'pdf','image/jpeg'=>'jpg','image/png'=>'png',default=>'bin'
+        };
+        return Storage::disk($doc->disk)->download($doc->object_key,'creator-verification-'.$doc->id.'.'.$extension);
+    }
+
+    public function decideCreator(Request $request, int $case)
+    {
+        $data = $request->validate([
+            'decision'=>['required','in:approved,rejected'],
+            'reason'=>['required_if:decision,rejected','nullable','string','max:2000']
+        ]);
+        DB::transaction(function () use ($request,$case,$data) {
+            $locked = CreatorVerificationCase::whereKey($case)->lockForUpdate()->firstOrFail();
+            abort_unless($locked->status === 'submitted',409,'Esta candidatura já foi analisada.');
+            $profile = $locked->creatorProfile()->lockForUpdate()->firstOrFail();
+            $approved = $data['decision'] === 'approved';
+            if ($approved && !$locked->documents()->where('document_type','identity')->where('status','submitted')->exists()) {
+                throw ValidationException::withMessages(['documents'=>['É obrigatório um documento de identificação submetido.']]);
+            }
+            $locked->update([
+                'status'=>$approved?'approved':'rejected','decision_reason'=>$data['reason']??null,
+                'reviewed_by'=>$request->user()->id,'reviewed_at'=>now()
+            ]);
+            $profile->update([
+                'status'=>$approved?'approved':'rejected','approved_at'=>$approved?now():null,
+                'reviewed_by'=>$request->user()->id
+            ]);
+        });
+        return redirect()->route('dashboard')->with('success','Decisão de validação registada.');
+    }
+
 }
