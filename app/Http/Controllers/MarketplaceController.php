@@ -153,7 +153,7 @@ class MarketplaceController extends Controller
     {
         $data = $request->validate([
             'public_name' => ['required','string','min:2','max:120'],
-            'bio' => ['nullable','string','max:2000'],
+            'bio' => ['nullable','string','max:280'],
             'country_code' => ['required','string','size:2','alpha'],
             'identity_document' => ['required','file','mimes:pdf,jpg,jpeg,png','max:10240'],
             'accept_creator_terms' => ['accepted'],
