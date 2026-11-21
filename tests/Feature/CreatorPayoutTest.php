@@ -101,6 +101,31 @@ class CreatorPayoutTest extends TestCase
         $this->assertSame(1, CreatorLedgerEntry::where('idempotency_key', 'creator-payout-'.$payout->id.'-return-available')->count());
     }
 
+    public function test_late_settlement_events_do_not_change_a_returned_payout(): void
+    {
+        [$user, $profile] = $this->creatorWithAvailableBalance(12500);
+        $payout = $this->requestedPayout($user, $profile, 12500);
+        $payout->update(['status' => 'processing', 'paypal_batch_id' => 'BATCH-LATE-RETURN']);
+
+        $finalizer = app(CreatorPayoutFinalizer::class);
+        $finalizer->complete($payout, 'BATCH-LATE-RETURN', 'ITEM-LATE-RETURN');
+        $finalizer->returnFunds($payout->fresh(), 'BATCH-LATE-RETURN', 'ITEM-LATE-RETURN', 'PayPal returned the payout');
+
+        // Delayed or out-of-order notifications must not re-settle a returned payout.
+        $finalizer->fail($payout->fresh(), 'BATCH-LATE-RETURN', 'ITEM-LATE-RETURN', 'Late failure event');
+        $finalizer->complete($payout->fresh(), 'BATCH-LATE-RETURN', 'ITEM-LATE-RETURN');
+
+        $available = CreatorLedgerAccount::where('creator_profile_id', $profile->id)
+            ->where('account_type', 'available')->firstOrFail();
+        $reserved = CreatorLedgerAccount::where('creator_profile_id', $profile->id)
+            ->where('account_type', 'payout_reserved')->firstOrFail();
+
+        $this->assertSame('returned', $payout->fresh()->status);
+        $this->assertSame(12500, (int) CreatorLedgerEntry::where('ledger_account_id', $available->id)->sum('amount_minor'));
+        $this->assertSame(0, (int) CreatorLedgerEntry::where('ledger_account_id', $reserved->id)->sum('amount_minor'));
+        $this->assertSame(3, CreatorLedgerEntry::where('reference_id', (string) $payout->id)->count());
+    }
+
     public function test_creator_cannot_request_a_payout_below_the_configured_minimum(): void
     {
         Config::set('marketplace.payout_minimum_minor', 5000);
