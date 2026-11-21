@@ -17,12 +17,18 @@ class AuthController extends Controller
             'name' => ['required', 'string', 'max:120'],
             'email' => ['required', 'email:rfc', 'max:255', 'unique:users,email'],
             'password' => ['required', 'string', 'min:12', 'max:128'],
+            'account_type' => ['required', 'in:user,creator'],
         ]);
 
-        $user = User::create($data);
+        $user = User::create([
+            'name' => $data['name'],
+            'email' => $data['email'],
+            'password' => $data['password'],
+            'account_type' => $data['account_type'],
+        ]);
 
         return response()->json([
-            'user' => ['id' => $user->id, 'name' => $user->name, 'email' => $user->email],
+            'user' => ['id' => $user->id, 'name' => $user->name, 'email' => $user->email, 'account_type' => $user->account_type],
             'token' => $user->createToken('api')->plainTextToken,
         ], 201);
     }
@@ -41,7 +47,7 @@ class AuthController extends Controller
         }
 
         return response()->json([
-            'user' => ['id' => $user->id, 'name' => $user->name, 'email' => $user->email],
+            'user' => ['id' => $user->id, 'name' => $user->name, 'email' => $user->email, 'account_type' => $user->account_type],
             'token' => $user->createToken('api')->plainTextToken,
         ]);
     }

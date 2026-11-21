@@ -109,4 +109,21 @@ class MarketplaceDashboardTest extends TestCase
             ->assertSee('pode ser solicitado quando atinge o mínimo configurado')
             ->assertSee('existe um endereço PayPal válido');
     }
+    public function test_user_dashboard_does_not_show_creator_application_or_finances(): void
+    {
+        $user = User::create([
+            'name' => 'Buyer Dashboard',
+            'email' => 'buyer-dashboard@example.test',
+            'password' => 'password-long-enough',
+            'account_type' => 'user',
+        ]);
+
+        $this->actingAs($user)->get('/minha-area')
+            ->assertOk()
+            ->assertSee('Área USER')
+            ->assertSee('Explorar conteúdos')
+            ->assertDontSee('Candidatura de criador')
+            ->assertDontSee('Resumo financeiro');
+    }
+
 }

@@ -19,7 +19,7 @@ class MediaLibraryTest extends TestCase
     public function test_free_published_media_can_be_claimed_and_downloaded(): void
     {
         Storage::fake('private');
-        $buyer = User::create(['name' => 'Free Buyer', 'email' => 'free-buyer@example.test', 'password' => 'password-long-enough']);
+        $buyer = User::create(['name' => 'Free Buyer', 'email' => 'free-buyer@example.test', 'password' => 'password-long-enough', 'account_type' => 'user']);
         $media = $this->createPublishedMedia('free', 'free-library-item');
         $path = 'creator-media/originals/free-library-item.jpg';
         Storage::disk('private')->put($path, 'image-bytes');
@@ -53,7 +53,7 @@ class MediaLibraryTest extends TestCase
     public function test_paid_original_cannot_be_downloaded_without_active_entitlement(): void
     {
         Storage::fake('private');
-        $buyer = User::create(['name' => 'No Access', 'email' => 'no-access@example.test', 'password' => 'password-long-enough']);
+        $buyer = User::create(['name' => 'No Access', 'email' => 'no-access@example.test', 'password' => 'password-long-enough', 'account_type' => 'user']);
         $media = $this->createPublishedMedia('paid', 'paid-library-item');
         Sanctum::actingAs($buyer);
 
@@ -64,8 +64,8 @@ class MediaLibraryTest extends TestCase
     public function test_another_buyer_cannot_use_someone_elses_entitlement(): void
     {
         Storage::fake('private');
-        $owner = User::create(['name' => 'Grant Owner', 'email' => 'grant-owner@example.test', 'password' => 'password-long-enough']);
-        $other = User::create(['name' => 'Different Buyer', 'email' => 'different-buyer@example.test', 'password' => 'password-long-enough']);
+        $owner = User::create(['name' => 'Grant Owner', 'email' => 'grant-owner@example.test', 'password' => 'password-long-enough', 'account_type' => 'user']);
+        $other = User::create(['name' => 'Different Buyer', 'email' => 'different-buyer@example.test', 'password' => 'password-long-enough', 'account_type' => 'user']);
         $media = $this->createPublishedMedia('paid', 'other-buyers-item');
         $grant = MediaAccessGrant::create([
             'buyer_id' => $owner->id,
@@ -81,7 +81,7 @@ class MediaLibraryTest extends TestCase
 
     private function createPublishedMedia(string $visibility, string $slug): DigitalMedia
     {
-        $seller = User::create(['name' => 'Library Seller', 'email' => $slug.'@example.test', 'password' => 'password-long-enough']);
+        $seller = User::create(['name' => 'Library Seller', 'email' => $slug.'@example.test', 'password' => 'password-long-enough', 'account_type' => 'creator']);
         $profile = CreatorProfile::create([
             'user_id' => $seller->id,
             'public_name' => 'Library Seller',

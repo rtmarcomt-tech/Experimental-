@@ -1,0 +1,27 @@
+<?php
+
+use Illuminate\Database\Migrations\Migration;
+use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Schema;
+
+return new class extends Migration {
+    public function up(): void
+    {
+        Schema::table('users', function (Blueprint $table): void {
+            $table->string('account_type', 16)->default('user')->index();
+        });
+
+        DB::table('users')
+            ->whereIn('id', DB::table('creator_profiles')->select('user_id'))
+            ->update(['account_type' => 'creator']);
+    }
+
+    public function down(): void
+    {
+        Schema::table('users', function (Blueprint $table): void {
+            $table->dropIndex(['account_type']);
+            $table->dropColumn('account_type');
+        });
+    }
+};

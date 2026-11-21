@@ -20,9 +20,27 @@ class CreatorOnboardingTest extends TestCase
         $this->postJson('/api/creator/application', [])->assertUnauthorized();
     }
 
+
+    public function test_user_account_cannot_submit_creator_application(): void
+    {
+        $user = User::create([
+            'name' => 'Buyer only',
+            'email' => 'buyer-only@example.test',
+            'password' => 'password-long-enough',
+            'account_type' => 'user',
+        ]);
+        Sanctum::actingAs($user);
+
+        $this->postJson('/api/creator/application', [
+            'public_name' => 'Not allowed',
+            'country_code' => 'PT',
+            'accept_creator_terms' => true,
+        ])->assertForbidden();
+    }
+
     public function test_user_can_submit_creator_application_and_starts_pending(): void
     {
-        $user = User::create(['name' => 'Creator One', 'email' => 'creator@example.test', 'password' => 'password-long-enough']);
+        $user = User::create(['name' => 'Creator One', 'email' => 'creator@example.test', 'password' => 'password-long-enough', 'account_type' => 'creator']);
         Sanctum::actingAs($user);
 
         $this->postJson('/api/creator/application', [
@@ -121,9 +139,10 @@ class CreatorOnboardingTest extends TestCase
             'name' => 'New User',
             'email' => 'new-user@example.test',
             'password' => 'long-password-123',
+            'account_type' => 'user',
             'is_admin' => true,
         ])->assertCreated();
 
-        $this->assertDatabaseHas('users', ['id' => $response->json('user.id'), 'is_admin' => false]);
+        $this->assertDatabaseHas('users', ['id' => $response->json('user.id'), 'is_admin' => false, 'account_type' => 'user']);
     }
 }

@@ -43,6 +43,7 @@ class PurchaseHistoryTest extends TestCase
             'name' => 'Other Buyer',
             'email' => 'history-other@example.test',
             'password' => 'password-long-enough',
+            'account_type' => 'user',
         ]);
 
         $this->actingAs($other)->get('/compras/'.$order->order_reference)->assertNotFound();
@@ -54,11 +55,13 @@ class PurchaseHistoryTest extends TestCase
             'name' => 'Purchase Buyer',
             'email' => $prefix.'-buyer@example.test',
             'password' => 'password-long-enough',
+            'account_type' => 'user',
         ]);
         $seller = User::create([
             'name' => 'Purchase Seller',
             'email' => $prefix.'-seller@example.test',
             'password' => 'password-long-enough',
+            'account_type' => 'creator',
         ]);
         $profile = CreatorProfile::create([
             'user_id' => $seller->id,

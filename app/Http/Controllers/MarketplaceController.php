@@ -106,7 +106,7 @@ class MarketplaceController extends Controller
             throw ValidationException::withMessages(['email' => ['As credenciais não são válidas.']]);
         }
         $request->session()->regenerate();
-        return redirect()->intended(route('dashboard'));
+        return redirect()->route('dashboard');
     }
 
     public function register(Request $request)
@@ -115,12 +115,14 @@ class MarketplaceController extends Controller
             'name' => ['required','string','max:120'],
             'email' => ['required','email','max:255','unique:users,email'],
             'password' => ['required','string','min:10','confirmed'],
+            'account_type' => ['required','in:user,creator'],
         ]);
         $user = User::create([
             'name' => $data['name'],
             'email' => $data['email'],
             'password' => Hash::make($data['password']),
             'account_status' => 'active',
+            'account_type' => $data['account_type'],
         ]);
         Auth::login($user);
         $request->session()->regenerate();
@@ -164,6 +166,11 @@ class MarketplaceController extends Controller
             return view('marketplace.admin', compact('pendingCases','stats','recentOrders','adminPayouts','adminPayoutsOpen'));
         }
         $profile = $user->creatorProfile;
+        if ($user->account_type === 'user' && ! $profile) {
+            $library = MediaAccessGrant::where('buyer_id', $user->id)->whereNull('revoked_at')
+                ->with('digitalMedia.creatorProfile')->latest('granted_at')->get();
+            return view('marketplace.buyer-dashboard', compact('library'));
+        }
         $media = $profile ? $profile->media()->with('assets')->latest()->get() : collect();
         $creatorPayouts = $profile ? CreatorPayout::where('creator_profile_id', $profile->id)->latest('requested_at')->limit(10)->get() : collect();
         $library = MediaAccessGrant::where('buyer_id',$user->id)->whereNull('revoked_at')
