@@ -147,7 +147,21 @@ class MarketplaceController extends Controller
         $media = $profile ? $profile->media()->with('assets')->latest()->get() : collect();
         $library = MediaAccessGrant::where('buyer_id',$user->id)->whereNull('revoked_at')
             ->with('digitalMedia.creatorProfile')->latest('granted_at')->get();
-        return view('marketplace.dashboard', compact('profile','media','library'));
+        $creatorStats = ['sales' => 0, 'gross_minor' => 0, 'net_minor' => 0];
+        if ($profile && $profile->status === 'approved') {
+            $totals = OrderItem::query()
+                ->join('orders', 'orders.id', '=', 'order_items.order_id')
+                ->where('order_items.creator_profile_id', $profile->id)
+                ->where('orders.status', 'captured')
+                ->selectRaw('COUNT(order_items.id) as sales, COALESCE(SUM(order_items.unit_price_minor), 0) as gross_minor, COALESCE(SUM(order_items.creator_net_minor), 0) as net_minor')
+                ->first();
+            $creatorStats = [
+                'sales' => (int) $totals->sales,
+                'gross_minor' => (int) $totals->gross_minor,
+                'net_minor' => (int) $totals->net_minor,
+            ];
+        }
+        return view('marketplace.dashboard', compact('profile','media','library','creatorStats'));
     }
 
     public function purchaseHistory(Request $request)
