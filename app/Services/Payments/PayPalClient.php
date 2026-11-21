@@ -83,6 +83,48 @@ class PayPalClient
             ->json();
     }
 
+    /**
+     * Refund a captured payment. A null amount requests a full refund;
+     * a positive amount in minor units requests a partial refund.
+     */
+    public function refundCapture(
+        string $captureId,
+        ?int $amountMinor,
+        string $currency,
+        string $idempotencyKey,
+        ?string $noteToPayer = null
+    ): array {
+        if ($captureId === '' || $idempotencyKey === '') {
+            throw new RuntimeException('A capture ID and refund idempotency key are required.');
+        }
+
+        if ($amountMinor !== null && $amountMinor <= 0) {
+            throw new RuntimeException('A partial refund amount must be positive.');
+        }
+
+        $payload = [];
+        if ($amountMinor !== null) {
+            $payload['amount'] = [
+                'currency_code' => strtoupper($currency),
+                'value' => $this->formatMinor($amountMinor),
+            ];
+        }
+        if ($noteToPayer !== null && trim($noteToPayer) !== '') {
+            $payload['note_to_payer'] = mb_substr(trim($noteToPayer), 0, 255);
+        }
+
+        return Http::baseUrl($this->baseUrl())
+            ->withToken($this->accessToken())
+            ->withHeaders([
+                'PayPal-Request-Id' => $idempotencyKey,
+                'Prefer' => 'return=representation',
+            ])
+            ->acceptJson()
+            ->post('/v2/payments/captures/'.$captureId.'/refund', $payload)
+            ->throw()
+            ->json();
+    }
+
     public function verifyWebhook(array $headers, array $event): bool
     {
         $webhookId = (string) config('paypal.webhook_id');
