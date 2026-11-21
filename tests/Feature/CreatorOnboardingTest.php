@@ -74,10 +74,10 @@ class CreatorOnboardingTest extends TestCase
         $this->patchJson('/api/admin/creator-verification-cases/'.$case->id, ['decision' => 'approved'])->assertUnprocessable();
 
         Sanctum::actingAs($owner);
-        $upload = $this->postJson('/api/creator/application/documents', [
+        $upload = $this->post('/api/creator/application/documents', [
             'document_type' => 'identity',
             'document' => UploadedFile::fake()->create('identity.pdf', 100, 'application/pdf'),
-        ])->assertCreated()->assertJsonPath('document.status', 'submitted');
+        ], ['Accept' => 'application/json'])->assertCreated()->assertJsonPath('document.status', 'submitted');
 
         $this->assertDatabaseHas('creator_verification_documents', [
             'creator_verification_case_id' => $case->id,
