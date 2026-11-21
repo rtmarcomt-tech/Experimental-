@@ -130,6 +130,7 @@ class CreatorContentLifecycleTest extends TestCase
         $this->actingAs($buyer)->get('/criador/'.$profile->slug)->assertNotFound();
         $this->get('/media/'.$media->slug)->assertNotFound();
         $this->post('/media/'.$media->slug.'/claim')->assertNotFound();
+        $this->postJson('/api/media/'.$media->slug.'/claim')->assertNotFound();
         $this->assertSame(0, MediaAccessGrant::where('digital_media_id', $media->id)->count());
     }
 
