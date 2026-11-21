@@ -1,20 +1,21 @@
 <?php
 
-use App\Http\Controllers\Api\AdminCreatorVerificationController;
-use App\Http\Controllers\Api\AuthController;
-use App\Http\Controllers\Api\CreatorApplicationController;
-use App\Http\Controllers\Api\CreatorMediaController;
-use App\Http\Controllers\Api\CreatorMediaPublicationController;
-use App\Http\Controllers\Api\CreatorVerificationDocumentController;
-use App\Http\Controllers\Api\MediaLibraryController;
-use App\Http\Controllers\Api\OrderCheckoutController;
-use App\Http\Controllers\Api\PayPalWebhookController;
-use Illuminate\Support\Facades\Route;
+use App\\Http\\Controllers\\Api\\AdminCreatorVerificationController;
+use App\\Http\\Controllers\\Api\\AdminPaymentRefundController;
+use App\\Http\\Controllers\\Api\\AuthController;
+use App\\Http\\Controllers\\Api\\CreatorApplicationController;
+use App\\Http\\Controllers\\Api\\CreatorMediaController;
+use App\\Http\\Controllers\\Api\\CreatorMediaPublicationController;
+use App\\Http\\Controllers\\Api\\CreatorVerificationDocumentController;
+use App\\Http\\Controllers\\Api\\MediaLibraryController;
+use App\\Http\\Controllers\\Api\\OrderCheckoutController;
+use App\\Http\\Controllers\\Api\\PayPalWebhookController;
+use Illuminate\\Support\\Facades\\Route;
 
 Route::get('/health', fn () => response()->json([
     'status' => 'ok',
     'application' => 'digital-creator-marketplace',
-    'version' => '0.8.0',
+    'version' => '0.9.0',
 ]));
 
 Route::post('/webhooks/paypal', PayPalWebhookController::class)->middleware('throttle:60,1');
@@ -51,4 +52,6 @@ Route::prefix('admin')
         Route::get('/creator-verification-cases', [AdminCreatorVerificationController::class, 'index']);
         Route::get('/creator-verification-documents/{document}', [AdminCreatorVerificationController::class, 'downloadDocument']);
         Route::patch('/creator-verification-cases/{case}', [AdminCreatorVerificationController::class, 'decide']);
+        Route::post('/orders/{reference}/refunds', [AdminPaymentRefundController::class, 'store'])
+            ->middleware('throttle:10,1');
     });
