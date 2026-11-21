@@ -7,6 +7,7 @@ use App\Models\DigitalMedia;
 use App\Models\FundHold;
 use App\Models\MediaAccessGrant;
 use App\Models\Order;
+use App\Models\PaypalWebhookEvent;
 use App\Models\PaymentTransaction;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -139,6 +140,60 @@ class CheckoutFlowTest extends TestCase
 
         $this->assertDatabaseCount('media_access_grants', 0);
         $this->assertDatabaseCount('creator_ledger_entries', 0);
+    }
+
+    public function test_verified_paypal_webhook_finalizes_capture_once(): void
+    {
+        $buyer = User::create(['name' => 'Buyer', 'email' => 'buyer-webhook@example.test', 'password' => 'password-long-enough']);
+        $media = $this->createPaidMedia();
+        Sanctum::actingAs($buyer);
+        config(['paypal.webhook_id' => 'WEBHOOK-ID-001']);
+        $this->fakePayPal();
+
+        $checkout = $this->postJson('/api/media/'.$media->slug.'/checkout', [], [
+            'Idempotency-Key' => 'webhook-checkout-key-006',
+        ])->assertCreated();
+
+        $event = [
+            'id' => 'WH-EVENT-001',
+            'event_type' => 'PAYMENT.CAPTURE.COMPLETED',
+            'resource' => [
+                'id' => 'PAYPAL-CAPTURE-001',
+                'amount' => ['currency_code' => 'EUR', 'value' => '12.50'],
+                'supplementary_data' => [
+                    'related_ids' => ['order_id' => 'PAYPAL-ORDER-001'],
+                ],
+            ],
+        ];
+        $headers = [
+            'PAYPAL-AUTH-ALGO' => 'SHA256withRSA',
+            'PAYPAL-CERT-URL' => 'https://api-m.sandbox.paypal.com/cert/test',
+            'PAYPAL-TRANSMISSION-ID' => 'TRANSMISSION-001',
+            'PAYPAL-TRANSMISSION-SIG' => 'signature',
+            'PAYPAL-TRANSMISSION-TIME' => '2026-11-21T12:00:00Z',
+        ];
+
+        Http::fake([
+            'https://api-m.sandbox.paypal.com/v1/notifications/verify-webhook-signature' => Http::response([
+                'verification_status' => 'SUCCESS',
+            ], 200),
+        ]);
+
+        $this->postJson('/api/webhooks/paypal', $event, $headers)->assertOk()->assertJsonPath('status', 'processed');
+        $this->postJson('/api/webhooks/paypal', $event, $headers)->assertOk()->assertJsonPath('status', 'processed');
+
+        $this->assertDatabaseHas('orders', [
+            'order_reference' => $checkout->json('order_reference'),
+            'status' => 'captured',
+        ]);
+        $this->assertDatabaseHas('paypal_webhook_events', [
+            'provider_event_id' => 'WH-EVENT-001',
+            'processing_status' => 'processed',
+        ]);
+        $this->assertDatabaseCount('media_access_grants', 1);
+        $this->assertDatabaseCount('creator_ledger_entries', 1);
+        $this->assertDatabaseCount('fund_holds', 1);
+        self::assertSame(1, PaypalWebhookEvent::count());
     }
 
     public function test_creator_cannot_purchase_own_paid_media(): void
