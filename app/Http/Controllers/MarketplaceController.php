@@ -3,7 +3,7 @@
 namespace App\\Http\\Controllers;
 
 use App\\Models\\CreatorProfile;
-use App\\Models\\CreatorVerificationDocument;
+use App\\Models\\CreatorVerificationDocument;\nuse App\\Models\\CreatorVerificationCase;\nuse App\\Models\\MediaDownloadEvent;\nuse App\\Models\\MediaAccessGrant;
 use App\\Models\\DigitalMedia;
 use App\\Models\\MediaAccessGrant;
 use App\\Models\\MediaRightsDeclaration;
@@ -12,7 +12,7 @@ use Illuminate\\Http\\Request;
 use Illuminate\\Support\\Facades\\Auth;
 use Illuminate\\Support\\Facades\\DB;
 use Illuminate\\Support\\Facades\\Hash;
-use Illuminate\\Support\\Facades\\Storage;
+use Illuminate\\Support\\Facades\\Storage;\nuse Illuminate\\Support\\Str;
 use Illuminate\\Support\\Str;
 use Illuminate\\Validation\\ValidationException;
 
