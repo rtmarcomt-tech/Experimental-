@@ -1,0 +1,4 @@
+@extends('layouts.app')
+@section('content')
+<div class="auth"><div class="eyebrow">Bem-vindo de volta</div><h1>Entrar</h1><form method="post" action="{{ route('login.store') }}">@csrf<div class="field"><label>Email</label><input type="email" name="email" value="{{ old('email') }}" required autocomplete="email"></div><div class="field"><label>Palavra-passe</label><input type="password" name="password" required autocomplete="current-password"></div><label class="muted"><input type="checkbox" name="remember"> Manter sessão iniciada</label><p><button class="btn accent" style="width:100%">Entrar na minha área</button></p></form><p class="muted">Ainda não tens conta? <a href="{{ route('register') }}"><u>Criar conta</u></a></p></div>
+@endsection

@@ -1,0 +1,44 @@
+<?php
+
+namespace App\Models;
+
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
+
+class DigitalMedia extends Model
+{
+    protected $fillable = [
+        'creator_profile_id', 'type', 'title', 'slug', 'description',
+        'visibility', 'price_minor', 'currency', 'status', 'published_at',
+    ];
+
+    protected function casts(): array
+    {
+        return ['price_minor' => 'integer', 'published_at' => 'datetime'];
+    }
+
+    public function creatorProfile(): BelongsTo
+    {
+        return $this->belongsTo(CreatorProfile::class);
+    }
+
+    public function assets(): HasMany
+    {
+        return $this->hasMany(MediaAsset::class);
+    }
+
+    public function rightsDeclarations(): HasMany
+    {
+        return $this->hasMany(MediaRightsDeclaration::class);
+    }
+
+    public function isPurchasable(): bool
+    {
+        return $this->status === 'published'
+            && $this->visibility === 'paid'
+            && $this->price_minor !== null
+            && $this->price_minor > 0
+            && $this->creatorProfile?->canSell();
+    }
+}

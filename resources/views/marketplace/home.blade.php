@@ -1,0 +1,9 @@
+@extends('layouts.app')
+@section('title','Marketplace — Descobrir criadores')
+@section('content')
+<div class="wrap">
+<section class="hero"><div><div class="eyebrow">Um marketplace de criadores</div><h1>Imagem com<br>identidade própria.</h1><p>Descobre fotografia e vídeo de criadores independentes. Explora trabalhos, conhece novos olhares e guarda os conteúdos de que gostas.</p><a class="btn accent" href="#explorar">Explorar conteúdos</a></div><div class="hero-note">Um espaço digital dedicado à imagem, à expressão individual e ao trabalho de quem cria.</div></section>
+<div class="section-head" id="explorar"><div><div class="eyebrow">Seleção aberta</div><h2>Explorar conteúdos</h2></div><span class="muted">{{ $items->total() }} publicações</span></div>
+@if($items->count())<div class="grid">@foreach($items as $item)<a class="product" href="{{ route('media.show',$item->slug) }}">@php($preview=$item->assets->first()) @if($preview)<img src="{{ route('media.preview',$item->slug) }}" alt="{{ $item->title }}">@else<div class="placeholder">marketplace / {{ strtoupper($item->type) }}</div>@endif<div class="product-info"><div class="row"><span class="pill">{{ $item->type==='photo'?'Fotografia':'Vídeo' }}</span><span class="muted">{{ $item->visibility==='free'?'Gratuito':'Conteúdo individual' }}</span></div><h3>{{ $item->title }}</h3><div class="muted">{{ $item->creatorProfile->public_name }}</div><div class="price">{{ $item->visibility==='free'?'Acesso gratuito':number_format($item->price_minor/100,2,',',' ').' €' }}</div></div></a>@endforeach</div><div style="margin-top:30px">{{ $items->links() }}</div>@else<div class="empty"><strong>O catálogo está a preparar-se.</strong><p>As primeiras publicações dos criadores aparecerão aqui.</p></div>@endif
+</div>
+@endsection
