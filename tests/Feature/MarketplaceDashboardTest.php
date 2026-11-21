@@ -1,13 +1,13 @@
 <?php
 
-namespace Tests\Feature;
+namespace Tests\\Feature;
 
-use App\Models\CreatorLedgerAccount;
-use App\Models\CreatorLedgerEntry;
-use App\Models\CreatorProfile;
-use App\Models\User;
-use Illuminate\Foundation\Testing\RefreshDatabase;
-use Tests\TestCase;
+use App\\Models\\CreatorLedgerAccount;
+use App\\Models\\CreatorLedgerEntry;
+use App\\Models\\CreatorProfile;
+use App\\Models\\User;
+use Illuminate\\Foundation\\Testing\\RefreshDatabase;
+use Tests\\TestCase;
 
 class MarketplaceDashboardTest extends TestCase
 {
@@ -106,6 +106,7 @@ class MarketplaceDashboardTest extends TestCase
             ->assertSee('90,00 €')
             ->assertSee('30,00 €')
             ->assertSee('Saldo disponível')
-            ->assertSee('levantamentos estiver ativo');
+            ->assertSee('saldo disponível atinja o mínimo configurado')
+            ->assertSee('endereço PayPal válido');
     }
 }
