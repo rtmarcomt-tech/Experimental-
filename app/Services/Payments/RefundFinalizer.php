@@ -1,15 +1,15 @@
 <?php
 
-namespace App\\Services\\Payments;
+namespace App\Services\Payments;
 
-use App\\Models\\CreatorLedgerAccount;
-use App\\Models\\CreatorLedgerEntry;
-use App\\Models\\FundHold;
-use App\\Models\\MediaAccessGrant;
-use App\\Models\\Order;
-use App\\Models\\PaymentRefund;
-use App\\Models\\PaymentTransaction;
-use Illuminate\\Support\\Facades\\DB;
+use App\Models\CreatorLedgerAccount;
+use App\Models\CreatorLedgerEntry;
+use App\Models\FundHold;
+use App\Models\MediaAccessGrant;
+use App\Models\Order;
+use App\Models\PaymentRefund;
+use App\Models\PaymentTransaction;
+use Illuminate\Support\Facades\DB;
 use RuntimeException;
 
 class RefundFinalizer
