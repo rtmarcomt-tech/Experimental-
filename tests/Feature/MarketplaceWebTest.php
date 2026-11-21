@@ -65,8 +65,8 @@ class MarketplaceWebTest extends TestCase
             'title'=>'Library Draft',
             'description'=>'A work in progress.',
             'visibility'=>'free',
-            'original'=>UploadedFile::fake()->image('original.jpg'),
-            'preview'=>UploadedFile::fake()->image('preview.jpg'),
+            'original'=>UploadedFile::fake()->create('original.jpg', 100, 'image/jpeg'),
+            'preview'=>UploadedFile::fake()->create('preview.jpg', 100, 'image/jpeg'),
             'rights_basis'=>'owner',
             'accept_rights'=>'1',
         ])->assertRedirect(route('dashboard'));
