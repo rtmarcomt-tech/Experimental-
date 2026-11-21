@@ -31,6 +31,16 @@
                 <div class="stat"><strong>{{ number_format(config('marketplace.commission_bps', 1000) / 100, 1, ',', '.') }}%</strong><span>Comissão da plataforma</span></div>
             </div>
             <p class="muted">Os valores apresentados correspondem a vendas confirmadas. Não representam necessariamente saldo já disponível para levantamento; os fundos podem estar sujeitos ao período de retenção.</p>
+            <div class="panel" style="margin:18px 0">
+                <div class="eyebrow">Conta de criador</div>
+                <h3 style="font:22px Georgia,serif;margin:8px 0 16px">Resumo financeiro</h3>
+                <div class="stats">
+                    <div class="stat"><strong>{{ number_format($creatorFinance['pending_minor']/100,2,',','.') }} €</strong><span>Saldo pendente</span></div>
+                    <div class="stat"><strong>{{ number_format($creatorFinance['held_minor']/100,2,',','.') }} €</strong><span>Em período de retenção</span></div>
+                    <div class="stat"><strong>{{ number_format($creatorFinance['available_minor']/100,2,',','.') }} €</strong><span>Saldo disponível</span></div>
+                </div>
+                <p class="muted" style="margin-top:14px">O saldo disponível só poderá ser solicitado para pagamento quando o sistema de levantamentos estiver ativo e forem cumpridas as condições da plataforma.</p>
+            </div>
             <p style="margin-top:14px"><a class="btn secondary" href="{{ route('creator.show',$profile->slug) }}">Ver perfil público</a></p>
             <h3 style="font:22px Georgia,serif;margin-top:28px">Identidade pública</h3>
             <form method="post" action="{{ route('creator.profile.update') }}" enctype="multipart/form-data">
