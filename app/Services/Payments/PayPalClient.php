@@ -125,6 +125,51 @@ class PayPalClient
             ->json();
     }
 
+    public function createPayout(int $amountMinor, string $currency, string $recipientEmail, string $senderBatchId, string $senderItemId): array
+    {
+        if ($amountMinor <= 0 || ! filter_var($recipientEmail, FILTER_VALIDATE_EMAIL)) {
+            throw new RuntimeException('A positive payout amount and valid recipient email are required.');
+        }
+
+        return Http::baseUrl($this->baseUrl())
+            ->withToken($this->accessToken())
+            ->withHeaders(['PayPal-Request-Id' => $senderBatchId])
+            ->acceptJson()
+            ->post('/v1/payments/payouts', [
+                'sender_batch_header' => [
+                    'sender_batch_id' => $senderBatchId,
+                    'email_subject' => 'O teu pagamento do Marketplace',
+                    'email_message' => 'O pagamento dos teus conteúdos foi enviado.',
+                ],
+                'items' => [[
+                    'recipient_type' => 'EMAIL',
+                    'amount' => [
+                        'value' => $this->formatMinor($amountMinor),
+                        'currency' => strtoupper($currency),
+                    ],
+                    'receiver' => $recipientEmail,
+                    'note' => 'Pagamento de receitas de criador',
+                    'sender_item_id' => $senderItemId,
+                ]],
+            ])
+            ->throw()
+            ->json();
+    }
+
+    public function getPayoutBatch(string $batchId): array
+    {
+        if ($batchId === '') {
+            throw new RuntimeException('A PayPal payout batch ID is required.');
+        }
+
+        return Http::baseUrl($this->baseUrl())
+            ->withToken($this->accessToken())
+            ->acceptJson()
+            ->get('/v1/payments/payouts/'.$batchId)
+            ->throw()
+            ->json();
+    }
+
     public function verifyWebhook(array $headers, array $event): bool
     {
         $webhookId = (string) config('paypal.webhook_id');
