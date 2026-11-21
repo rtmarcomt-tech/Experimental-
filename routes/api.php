@@ -3,13 +3,14 @@
 use App\Http\Controllers\Api\AdminCreatorVerificationController;
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\CreatorApplicationController;
+use App\Http\Controllers\Api\CreatorMediaController;
 use App\Http\Controllers\Api\CreatorVerificationDocumentController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/health', fn () => response()->json([
     'status' => 'ok',
     'application' => 'digital-creator-marketplace',
-    'version' => '0.3.0',
+    'version' => '0.4.0',
 ]));
 
 Route::post('/auth/register', [AuthController::class, 'register'])->middleware('throttle:5,1');
@@ -21,6 +22,10 @@ Route::middleware('auth:sanctum')->group(function (): void {
     Route::post('/creator/application', [CreatorApplicationController::class, 'submit']);
     Route::post('/creator/application/documents', [CreatorVerificationDocumentController::class, 'store'])
         ->middleware('throttle:10,1');
+    Route::get('/creator/media', [CreatorMediaController::class, 'index']);
+    Route::post('/creator/media', [CreatorMediaController::class, 'store'])->middleware('throttle:10,1');
+    Route::get('/creator/media/{media}', [CreatorMediaController::class, 'show']);
+    Route::patch('/creator/media/{media}', [CreatorMediaController::class, 'update']);
 });
 
 Route::prefix('admin')
