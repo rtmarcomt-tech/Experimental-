@@ -1,6 +1,8 @@
 <?php
 
 use App\Http\Controllers\MarketplaceController;
+use App\Http\Controllers\CreatorPayoutController;
+use App\Http\Controllers\AdminCreatorPayoutController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', [MarketplaceController::class, 'home'])->name('home');
