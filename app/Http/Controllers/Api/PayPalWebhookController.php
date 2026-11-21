@@ -1,20 +1,27 @@
 <?php
 
-namespace App\Http\Controllers\Api;
+namespace App\\Http\\Controllers\\Api;
 
-use App\Http\Controllers\Controller;
-use App\Models\PaypalWebhookEvent;
-use App\Services\Payments\CaptureFinalizer;
-use App\Services\Payments\PayPalClient;
-use Illuminate\Http\JsonResponse;
-use Illuminate\Http\Request;
-use Illuminate\Support\Facades\DB;
+use App\\Http\\Controllers\\Controller;
+use App\\Models\\PaymentRefund;
+use App\\Models\\PaymentTransaction;
+use App\\Models\\PaypalWebhookEvent;
+use App\\Services\\Payments\\CaptureFinalizer;
+use App\\Services\\Payments\\PayPalClient;
+use App\\Services\\Payments\\RefundFinalizer;
+use Illuminate\\Http\\JsonResponse;
+use Illuminate\\Http\\Request;
+use Illuminate\\Support\\Facades\\DB;
 use Throwable;
 
 class PayPalWebhookController extends Controller
 {
-    public function __invoke(Request $request, PayPalClient $paypal, CaptureFinalizer $finalizer): JsonResponse
-    {
+    public function __invoke(
+        Request $request,
+        PayPalClient $paypal,
+        CaptureFinalizer $captureFinalizer,
+        RefundFinalizer $refundFinalizer
+    ): JsonResponse {
         $event = $request->all();
         $eventId = data_get($event, 'id');
         $eventType = data_get($event, 'event_type');
@@ -79,10 +86,38 @@ class PayPalWebhookController extends Controller
                 $currency = data_get($resource, 'amount.currency_code');
 
                 if (! is_string($paypalOrderId) || ! is_string($captureId) || ! is_string($amount) || ! is_string($currency)) {
-                    throw new \RuntimeException('PayPal capture webhook is missing required payment identifiers.');
+                    throw new \\RuntimeException('PayPal capture webhook is missing required payment identifiers.');
                 }
 
-                $finalizer->finalize($paypalOrderId, $captureId, $paypal->parseMinor($amount), $currency);
+                $captureFinalizer->finalize($paypalOrderId, $captureId, $paypal->parseMinor($amount), $currency);
+            } elseif ($eventType === 'PAYMENT.CAPTURE.REFUNDED') {
+                $resource = data_get($event, 'resource', []);
+                $providerRefundId = data_get($resource, 'id');
+                $amount = data_get($resource, 'amount.value');
+                $currency = data_get($resource, 'amount.currency_code');
+                $captureUrl = collect(data_get($resource, 'links', []))
+                    ->firstWhere('rel', 'up')['href'] ?? null;
+                $captureId = is_string($captureUrl) ? basename(parse_url($captureUrl, PHP_URL_PATH) ?: '') : null;
+
+                if (! is_string($providerRefundId) || ! is_string($amount) || ! is_string($currency) || ! is_string($captureId) || $captureId === '') {
+                    throw new \\RuntimeException('PayPal refund webhook is missing its refund, capture or amount details.');
+                }
+
+                $payment = PaymentTransaction::where('provider_capture_id', $captureId)->firstOrFail();
+                $refund = PaymentRefund::firstOrCreate(
+                    ['provider_refund_id' => $providerRefundId],
+                    [
+                        'payment_transaction_id' => $payment->id,
+                        'idempotency_key' => 'paypal-external-refund-'.hash('sha256', $providerRefundId),
+                        'gross_minor' => $paypal->parseMinor($amount),
+                        'currency' => strtoupper($currency),
+                        'status' => 'pending',
+                        'source' => 'paypal_external',
+                        'note' => data_get($resource, 'note'),
+                    ]
+                );
+
+                $refundFinalizer->finalize($refund, $providerRefundId, $paypal->parseMinor($amount), $currency);
             }
 
             $stored['row']->update([
