@@ -4,21 +4,39 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Models\CreatorVerificationCase;
+use App\Models\CreatorVerificationDocument;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\ValidationException;
+use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class AdminCreatorVerificationController extends Controller
 {
     public function index(): JsonResponse
     {
-        $cases = CreatorVerificationCase::with('creatorProfile:id,user_id,public_name,slug,status')
-            ->where('status', 'submitted')
-            ->orderBy('submitted_at')
-            ->paginate(25);
+        $cases = CreatorVerificationCase::with([
+            'creatorProfile:id,user_id,public_name,slug,status',
+            'documents:id,creator_verification_case_id,document_type,mime_type,size_bytes,status,created_at',
+        ])->where('status', 'submitted')->orderBy('submitted_at')->paginate(25);
 
         return response()->json($cases);
+    }
+
+    public function downloadDocument(CreatorVerificationDocument $document): StreamedResponse
+    {
+        $extension = match ($document->mime_type) {
+            'application/pdf' => 'pdf',
+            'image/jpeg' => 'jpg',
+            'image/png' => 'png',
+            default => 'bin',
+        };
+
+        return Storage::disk($document->disk)->download(
+            $document->object_key,
+            'creator-verification-'.$document->id.'.'.$extension
+        );
     }
 
     public function decide(Request $request, CreatorVerificationCase $case): JsonResponse
@@ -39,6 +57,12 @@ class AdminCreatorVerificationController extends Controller
 
             $profile = $lockedCase->creatorProfile()->lockForUpdate()->firstOrFail();
             $approved = $data['decision'] === 'approved';
+
+            if ($approved && ! $lockedCase->documents()->where('document_type', 'identity')->where('status', 'submitted')->exists()) {
+                throw ValidationException::withMessages([
+                    'documents' => ['An identity document must be submitted before approval.'],
+                ]);
+            }
 
             $lockedCase->update([
                 'status' => $approved ? 'approved' : 'rejected',

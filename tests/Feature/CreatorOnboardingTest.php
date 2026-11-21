@@ -6,6 +6,8 @@ use App\Models\CreatorProfile;
 use App\Models\CreatorVerificationCase;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\Storage;
 use Laravel\Sanctum\Sanctum;
 use Tests\TestCase;
 
@@ -51,8 +53,9 @@ class CreatorOnboardingTest extends TestCase
         ])->assertUnprocessable();
     }
 
-    public function test_only_admin_can_approve_a_creator_and_approval_is_atomic(): void
+    public function test_only_admin_can_approve_and_identity_document_is_required(): void
     {
+        Storage::fake('private');
         $owner = User::create(['name' => 'Applicant', 'email' => 'applicant@example.test', 'password' => 'password-long-enough']);
         $admin = User::create(['name' => 'Admin', 'email' => 'admin@example.test', 'password' => 'password-long-enough']);
         $admin->forceFill(['is_admin' => true])->save();
@@ -68,13 +71,27 @@ class CreatorOnboardingTest extends TestCase
         $this->patchJson('/api/admin/creator-verification-cases/'.$case->id, ['decision' => 'approved'])->assertForbidden();
 
         Sanctum::actingAs($admin);
+        $this->patchJson('/api/admin/creator-verification-cases/'.$case->id, ['decision' => 'approved'])->assertUnprocessable();
+
+        Sanctum::actingAs($owner);
+        $upload = $this->postJson('/api/creator/application/documents', [
+            'document_type' => 'identity',
+            'document' => UploadedFile::fake()->create('identity.pdf', 100, 'application/pdf'),
+        ])->assertCreated()->assertJsonPath('document.status', 'submitted');
+
+        $this->assertDatabaseHas('creator_verification_documents', [
+            'creator_verification_case_id' => $case->id,
+            'document_type' => 'identity',
+            'status' => 'submitted',
+        ]);
+
+        Sanctum::actingAs($admin);
         $this->patchJson('/api/admin/creator-verification-cases/'.$case->id, ['decision' => 'approved'])
             ->assertOk()
             ->assertJsonPath('creator_profile.status', 'approved')
             ->assertJsonPath('verification_case.status', 'approved');
 
         $this->assertDatabaseHas('creator_profiles', ['id' => $profile->id, 'status' => 'approved', 'reviewed_by' => $admin->id]);
-        $this->assertDatabaseHas('creator_verification_cases', ['id' => $case->id, 'status' => 'approved', 'reviewed_by' => $admin->id]);
     }
 
     public function test_rejection_requires_reason_and_profile_stays_unapproved(): void
@@ -107,7 +124,6 @@ class CreatorOnboardingTest extends TestCase
             'is_admin' => true,
         ])->assertCreated();
 
-        $userId = $response->json('user.id');
-        $this->assertDatabaseHas('users', ['id' => $userId, 'is_admin' => false]);
+        $this->assertDatabaseHas('users', ['id' => $response->json('user.id'), 'is_admin' => false]);
     }
 }
