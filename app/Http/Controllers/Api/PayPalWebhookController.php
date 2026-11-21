@@ -107,6 +107,13 @@ class PayPalWebhookController extends Controller
                     throw new \RuntimeException('PayPal payout webhook is missing its payout identifiers.');
                 }
                 $payout = $payoutQuery->firstOrFail();
+                $amountValue = data_get($resource, 'amount.value');
+                $amountCurrency = data_get($resource, 'amount.currency');
+                if (! is_string($amountValue) || ! is_string($amountCurrency)
+                    || $paypal->parseMinor($amountValue) !== $payout->amount_minor
+                    || strtoupper($amountCurrency) !== $payout->currency) {
+                    throw new \\RuntimeException('PayPal payout webhook amount does not match the stored payout.');
+                }
                 $resolvedBatchId = is_string($batchId) && $batchId !== '' ? $batchId : (string) $payout->paypal_batch_id;
                 if ($eventType === 'PAYMENT.PAYOUTS-ITEM.SUCCEEDED') {
                     $payoutFinalizer->complete($payout, $resolvedBatchId, is_string($itemId) ? $itemId : null);
