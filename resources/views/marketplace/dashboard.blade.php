@@ -38,8 +38,9 @@
                     <div class="stat"><strong>{{ number_format($creatorFinance['pending_minor']/100,2,',','.') }} €</strong><span>Saldo pendente, excluindo retenções</span></div>
                     <div class="stat"><strong>{{ number_format($creatorFinance['held_minor']/100,2,',','.') }} €</strong><span>Em período de retenção</span></div>
                     <div class="stat"><strong>{{ number_format($creatorFinance['available_minor']/100,2,',','.') }} €</strong><span>Saldo disponível</span></div>
+                    <div class="stat"><strong>{{ number_format($creatorFinance['payout_reserved_minor']/100,2,',','.') }} €</strong><span>Pagamento em processamento</span></div>
                 </div>
-                <p class="muted" style="margin-top:14px">O saldo disponível só poderá ser solicitado para pagamento quando o sistema de levantamentos estiver ativo e forem cumpridas as condições da plataforma.</p>
+                <p class="muted" style="margin-top:14px">O saldo disponível pode ser solicitado quando atinge o mínimo configurado e existe um endereço PayPal válido. Os montantes pedidos ficam reservados até confirmação do PayPal.</p>
             </div>
             <p style="margin-top:14px"><a class="btn secondary" href="{{ route('creator.show',$profile->slug) }}">Ver perfil público</a></p>
             <div class="section-head" style="margin-top:34px">
