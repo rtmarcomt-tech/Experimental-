@@ -18,6 +18,8 @@ Route::middleware('guest')->group(function (): void {
 Route::middleware('auth')->group(function (): void {
     Route::post('/sair', [MarketplaceController::class, 'logout'])->name('logout');
     Route::get('/minha-area', [MarketplaceController::class, 'dashboard'])->name('dashboard');
+    Route::get('/compras', [MarketplaceController::class, 'purchaseHistory'])->name('purchases.index');
+    Route::get('/compras/{reference}', [MarketplaceController::class, 'purchaseDetail'])->name('purchases.show');
     Route::post('/candidatura-criador', [MarketplaceController::class, 'applyCreator'])->name('creator.apply');
     Route::post('/criador/perfil', [MarketplaceController::class, 'updateCreatorProfile'])->name('creator.profile.update');
     Route::post('/criador/conteudos', [MarketplaceController::class, 'uploadMedia'])->name('creator.media.store');
