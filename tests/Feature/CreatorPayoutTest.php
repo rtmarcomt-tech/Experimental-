@@ -82,6 +82,64 @@ class CreatorPayoutTest extends TestCase
         app(CreatorPayoutRequestService::class)->request($profile, $user->id);
     }
 
+    public function test_admin_can_submit_and_reconcile_a_paypal_payout(): void
+    {
+        Cache::flush();
+        config([
+            'paypal.mode' => 'sandbox',
+            'paypal.client_id' => 'sandbox-client',
+            'paypal.client_secret' => 'sandbox-secret',
+        ]);
+        [$creator, $profile] = $this->creatorWithAvailableBalance(12500);
+        $payout = $this->requestedPayout($creator, $profile, 12500);
+
+        $admin = User::create([
+            'name' => 'Payout Admin',
+            'email' => 'payout-admin@example.test',
+            'password' => 'password-long-enough',
+        ]);
+        $admin->forceFill(['is_admin' => true])->save();
+
+        Http::fake([
+            'https://api-m.sandbox.paypal.com/v1/oauth2/token' => Http::response(['access_token' => 'payout-access-token', 'expires_in' => 3600], 200),
+            'https://api-m.sandbox.paypal.com/v1/payments/payouts' => Http::response([
+                'batch_header' => ['payout_batch_id' => 'PAYPAL-BATCH-TEST', 'batch_status' => 'PENDING'],
+            ], 201),
+            'https://api-m.sandbox.paypal.com/v1/payments/payouts/PAYPAL-BATCH-TEST' => Http::response([
+                'items' => [[
+                    'payout_item' => [
+                        'payout_item_id' => 'PAYPAL-ITEM-TEST',
+                        'sender_item_id' => 'creator-payout-'.$payout->id,
+                        'transaction_status' => 'SUCCESS',
+                        'amount' => ['value' => '125.00', 'currency' => 'EUR'],
+                    ],
+                ]],
+            ], 200),
+        ]);
+
+        $this->actingAs($admin)
+            ->post('/admin/pagamentos/'.$payout->id.'/enviar')
+            ->assertRedirect();
+
+        $this->assertDatabaseHas('creator_payouts', [
+            'id' => $payout->id,
+            'status' => 'processing',
+            'paypal_batch_id' => 'PAYPAL-BATCH-TEST',
+            'paypal_sender_item_id' => 'creator-payout-'.$payout->id,
+        ]);
+
+        $this->post('/admin/pagamentos/'.$payout->id.'/reconciliar')->assertRedirect();
+
+        $this->assertDatabaseHas('creator_payouts', [
+            'id' => $payout->id,
+            'status' => 'paid',
+            'paypal_item_id' => 'PAYPAL-ITEM-TEST',
+        ]);
+        Http::assertSent(fn ($request) => str_contains($request->url(), '/v1/payments/payouts')
+            && $request->method() === 'POST'
+            && $request->hasHeader('PayPal-Request-Id'));
+    }
+
     private function creatorWithAvailableBalance(int $amount): array
     {
         $user = User::create([
