@@ -6,6 +6,7 @@ use App\Http\Controllers\Api\CreatorApplicationController;
 use App\Http\Controllers\Api\CreatorMediaController;
 use App\Http\Controllers\Api\CreatorMediaPublicationController;
 use App\Http\Controllers\Api\CreatorVerificationDocumentController;
+use App\Http\Controllers\Api\MediaLibraryController;
 use App\Http\Controllers\Api\OrderCheckoutController;
 use App\Http\Controllers\Api\PayPalWebhookController;
 use Illuminate\Support\Facades\Route;
@@ -13,7 +14,7 @@ use Illuminate\Support\Facades\Route;
 Route::get('/health', fn () => response()->json([
     'status' => 'ok',
     'application' => 'digital-creator-marketplace',
-    'version' => '0.7.0',
+    'version' => '0.8.0',
 ]));
 
 Route::post('/webhooks/paypal', PayPalWebhookController::class)->middleware('throttle:60,1');
@@ -39,6 +40,9 @@ Route::middleware('auth:sanctum')->group(function (): void {
     Route::post('/creator/media/{media}/publish', [CreatorMediaPublicationController::class, 'publish']);
     Route::post('/media/{slug}/checkout', [OrderCheckoutController::class, 'create'])->middleware('throttle:10,1');
     Route::post('/orders/{reference}/capture', [OrderCheckoutController::class, 'capture'])->middleware('throttle:10,1');
+    Route::get('/library', [MediaLibraryController::class, 'index']);
+    Route::post('/media/{slug}/claim', [MediaLibraryController::class, 'claimFree']);
+    Route::get('/library/{media}/download', [MediaLibraryController::class, 'download'])->middleware('throttle:30,1');
 });
 
 Route::prefix('admin')

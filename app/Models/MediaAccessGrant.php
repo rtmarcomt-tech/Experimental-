@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class MediaAccessGrant extends Model
 {
@@ -25,6 +26,11 @@ class MediaAccessGrant extends Model
     public function buyer(): BelongsTo
     {
         return $this->belongsTo(User::class, 'buyer_id');
+    }
+
+    public function downloadEvents(): HasMany
+    {
+        return $this->hasMany(MediaDownloadEvent::class);
     }
 
     public function isActive(): bool
