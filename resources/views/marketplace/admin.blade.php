@@ -14,6 +14,16 @@
     </div>
 
     <section class="panel">
+        <div class="eyebrow">Estado da comunidade</div>
+        <div class="stats">
+            <div class="stat"><strong>{{ $stats['approved_creators'] }}</strong><span>Criadores aprovados</span></div>
+            <div class="stat"><strong>{{ $stats['rejected_creators'] }}</strong><span>Candidaturas rejeitadas</span></div>
+            <div class="stat"><strong>{{ $stats['active_accounts'] }}</strong><span>Contas ativas</span></div>
+            <div class="stat"><strong>{{ $stats['suspended_accounts'] }}</strong><span>Contas suspensas</span></div>
+        </div>
+    </section>
+
+    <section class="panel">
         <div class="eyebrow">Desempenho comercial</div>
         <h2 style="font:26px Georgia,serif;margin:8px 0 18px">Resumo financeiro</h2>
         <div class="stats">
