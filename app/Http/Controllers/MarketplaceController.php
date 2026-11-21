@@ -150,6 +150,36 @@ class MarketplaceController extends Controller
         return view('marketplace.dashboard', compact('profile','media','library'));
     }
 
+    public function purchaseHistory(Request $request)
+    {
+        $orders = Order::query()
+            ->where('buyer_id', $request->user()->id)
+            ->with(['item.creatorProfile:id,public_name,slug', 'paymentTransaction'])
+            ->latest()
+            ->paginate(20);
+
+        return view('marketplace.purchases', compact('orders'));
+    }
+
+    public function purchaseDetail(Request $request, string $reference)
+    {
+        $order = Order::query()
+            ->where('buyer_id', $request->user()->id)
+            ->where('order_reference', $reference)
+            ->with(['item.creatorProfile:id,public_name,slug', 'paymentTransaction'])
+            ->firstOrFail();
+
+        $grant = $order->paymentTransaction
+            ? MediaAccessGrant::query()
+                ->where('buyer_id', $request->user()->id)
+                ->where('payment_transaction_id', $order->paymentTransaction->id)
+                ->whereNull('revoked_at')
+                ->first()
+            : null;
+
+        return view('marketplace.purchase-detail', compact('order', 'grant'));
+    }
+
     public function applyCreator(Request $request)
     {
         $data = $request->validate([
