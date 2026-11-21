@@ -1,5 +1,5 @@
 @extends('layouts.app')
-@section('title','Administração — Atelier')
+@section('title','Administração — Marketplace')
 @section('content')
 <div class="wrap page"><div class="eyebrow">Back office</div><h1 class="page-title">Painel de administração</h1><p class="muted">Visão geral da plataforma e validação de criadores.</p><div class="stats">@foreach($stats as $label=>$value)<div class="stat"><strong>{{ $value }}</strong><span>{{ ['creators'=>'Criadores','pending'=>'Por validar','published'=>'Publicações','buyers'=>'Contas'][ $label ] }}</span></div>@endforeach</div>
 <div class="section-head"><div><div class="eyebrow">Onboarding</div><h2>Candidaturas pendentes</h2></div><span class="muted">{{ $pendingCases->count() }} por analisar</span></div>
