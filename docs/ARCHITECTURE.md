@@ -87,6 +87,20 @@ Calculate reconciled available balance -> enforce minimum and account checks -> 
 - Pending, rejected or suspended creators cannot upload or manage sellable media.
 - New uploads remain drafts. Publication requires a separately uploaded preview image and an accepted rights declaration (owner, licensed, or authorized). The public catalogue exposes only published metadata and preview images; original files remain private and are not exposed by the catalogue.
 
+## Checkout and PayPal payment flow
+
+- One order contains exactly one media item; the database enforces one order item per order.
+- Checkout requires an authenticated buyer, a published paid item, an eligible approved creator, and an Idempotency-Key header.
+- Self-purchases and repeat purchases with an active entitlement are rejected.
+- Order items snapshot creator, title, price, currency, commission basis points, platform commission and creator net at checkout.
+- PayPal OAuth credentials are server-side only. The buyer is redirected to the PayPal approval URL returned by Orders v2.
+- The server captures the approved order; client-side redirects are never treated as proof of payment.
+- Capture completion is accepted only when PayPal reports COMPLETED and the captured amount and currency match the stored order.
+- Capture finalization is idempotent: it creates one paid entitlement, one creator pending-ledger credit and one configurable fund hold.
+- PayPal webhook signatures are verified through PayPal's verification endpoint before events are persisted or processed.
+- Duplicate webhook event IDs are deduplicated. PAYMENT.CAPTURE.COMPLETED can finalize a payment if the buyer return flow does not.
+- Currency handling is deliberately restricted to EUR with two minor-unit decimal places in this initial checkout implementation.
+
 ## Implemented in current bootstrap
 - Laravel application skeleton and configuration.
 - User, creator profile and verification case schema.
