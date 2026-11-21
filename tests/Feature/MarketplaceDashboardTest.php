@@ -22,12 +22,42 @@ class MarketplaceDashboardTest extends TestCase
         ]);
         $admin->forceFill(['is_admin' => true])->save();
 
+        $activeCreator = User::create([
+            'name' => 'Active Creator',
+            'email' => 'active-creator-admin-dashboard@example.test',
+            'password' => 'password-long-enough',
+            'account_status' => 'active',
+        ]);
+        CreatorProfile::create([
+            'user_id' => $activeCreator->id,
+            'public_name' => 'Approved Creator',
+            'slug' => 'approved-creator-admin-dashboard',
+            'status' => 'approved',
+        ]);
+
+        $suspendedUser = User::create([
+            'name' => 'Suspended User',
+            'email' => 'suspended-admin-dashboard@example.test',
+            'password' => 'password-long-enough',
+            'account_status' => 'suspended',
+        ]);
+        CreatorProfile::create([
+            'user_id' => $suspendedUser->id,
+            'public_name' => 'Rejected Creator',
+            'slug' => 'rejected-creator-admin-dashboard',
+            'status' => 'rejected',
+        ]);
+
         $this->actingAs($admin)->get('/minha-area')
             ->assertOk()
             ->assertSee('Painel de administração')
             ->assertSee('Resumo financeiro')
             ->assertSee('Pedidos recentes')
-            ->assertSee('Candidaturas de criadores');
+            ->assertSee('Candidaturas de criadores')
+            ->assertSee('Criadores aprovados')
+            ->assertSee('Contas ativas')
+            ->assertSee('Contas suspensas')
+            ->assertSee('1', false);
     }
 
     public function test_creator_dashboard_shows_ledger_balances_without_exposing_them_as_paid_out(): void
