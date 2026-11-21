@@ -121,12 +121,15 @@ Calculate reconciled available balance -> enforce minimum and account checks -> 
 - PayPal OAuth, Orders v2 create/capture and webhook signature verification.
 - Capture validation, idempotent entitlement creation, creator pending-ledger credit and configurable hold creation.
 - Hourly matured-hold release command with idempotent pending-debit and available-credit ledger entries.
+- Admin-only PayPal refund requests with persisted provider refund IDs, idempotency, cumulative amount limits and verified refund webhook reconciliation.
+- Refund ledger reversals allocate creator proceeds cumulatively using the original sale split; pending holds are reduced/cancelled, while released proceeds are reversed from available balance.
+- Full refunds revoke the associated paid entitlement; partial refunds preserve access.
 - Free-content claims, buyer library and entitlement-controlled original downloads.
 - Download audit events with minimized identifiers.
 - Commission calculator in integer minor units with half-up rounding and invariant tests.
 
 ## Not implemented yet
-- Refund and dispute orchestration, reserve/debt handling and compensating ledger entries (the PayPal capture-refund client operation for full and partial refunds is implemented and covered by feature tests; the financial reconciliation workflow remains outstanding).
+- Dispute lifecycle, dispute evidence/response workflow, reserve/debt policy and automated payout blocking remain outstanding. Refund orchestration is implemented for admin-initiated and PayPal-notified completed refunds; it records cumulative gross, creator and platform reversal allocations and compensating creator-ledger entries.
 - Creator payout requests, PayPal Payouts account eligibility checks and reconciliation.
 - Full administrator and creator web interfaces.
 - Media transcoding, thumbnail/preview generation and malware scanning pipeline.
