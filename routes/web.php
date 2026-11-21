@@ -4,6 +4,7 @@ use App\Http\Controllers\MarketplaceController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', [MarketplaceController::class, 'home'])->name('home');
+Route::get('/criador/{slug}', [MarketplaceController::class, 'showCreator'])->name('creator.show');
 Route::get('/media/{slug}', [MarketplaceController::class, 'showMedia'])->name('media.show');
 Route::get('/media/{slug}/preview', fn (string $slug) => redirect('/api/media/'.$slug.'/preview'))->name('media.preview');
 
@@ -18,7 +19,10 @@ Route::middleware('auth')->group(function (): void {
     Route::post('/sair', [MarketplaceController::class, 'logout'])->name('logout');
     Route::get('/minha-area', [MarketplaceController::class, 'dashboard'])->name('dashboard');
     Route::post('/candidatura-criador', [MarketplaceController::class, 'applyCreator'])->name('creator.apply');
+    Route::post('/criador/perfil', [MarketplaceController::class, 'updateCreatorProfile'])->name('creator.profile.update');
     Route::post('/criador/conteudos', [MarketplaceController::class, 'uploadMedia'])->name('creator.media.store');
+    Route::post('/criador/conteudos/{media}/oferta', [MarketplaceController::class, 'updateMediaOffer'])->name('creator.media.offer');
+    Route::post('/criador/conteudos/{media}/publicar', [MarketplaceController::class, 'publishMedia'])->name('creator.media.publish');
     Route::post('/media/{slug}/claim', [MarketplaceController::class, 'claimFree'])->name('media.claim');
     Route::post('/media/{slug}/checkout', [MarketplaceController::class, 'checkout'])->name('media.checkout');
     Route::get('/checkout/paypal/return', [MarketplaceController::class, 'paypalReturn'])->name('paypal.return');
