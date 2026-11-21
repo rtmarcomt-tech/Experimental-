@@ -1,11 +1,11 @@
 <?php
 
-namespace App\\Services\\Payments;
+namespace App\Services\Payments;
 
-use App\\Models\\CreatorLedgerAccount;
-use App\\Models\\CreatorLedgerEntry;
-use App\\Models\\CreatorPayout;
-use Illuminate\\Support\\Facades\\DB;
+use App\Models\CreatorLedgerAccount;
+use App\Models\CreatorLedgerEntry;
+use App\Models\CreatorPayout;
+use Illuminate\Support\Facades\DB;
 use RuntimeException;
 
 class CreatorPayoutFinalizer
