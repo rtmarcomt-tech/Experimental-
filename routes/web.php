@@ -19,7 +19,7 @@ Route::middleware('auth')->group(function (): void {
     Route::get('/minha-area', [MarketplaceController::class, 'dashboard'])->name('dashboard');
     Route::post('/candidatura-criador', [MarketplaceController::class, 'applyCreator'])->name('creator.apply');
     Route::post('/criador/conteudos', [MarketplaceController::class, 'uploadMedia'])->name('creator.media.store');
-    Route::post('/media/{slug}/claim', [MarketplaceController::class, 'claimFree'])->name('media.claim');
+    Route::post('/media/{slug}/claim', [MarketplaceController::class, 'claimFree'])->name('media.claim');\n    Route::post('/media/{slug}/checkout', [MarketplaceController::class, 'checkout'])->name('media.checkout');\n    Route::get('/checkout/paypal/return', [MarketplaceController::class, 'paypalReturn'])->name('paypal.return');\n    Route::get('/checkout/paypal/cancel', [MarketplaceController::class, 'paypalCancel'])->name('paypal.cancel');
     Route::get('/biblioteca/{media}/download', [MarketplaceController::class, 'downloadLibrary'])->name('library.download');
 });
 
