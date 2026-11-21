@@ -158,6 +158,7 @@ class MarketplaceController extends Controller
         $media = $profile ? $profile->media()->with('assets')->latest()->get() : collect();
         $library = MediaAccessGrant::where('buyer_id',$user->id)->whereNull('revoked_at')
             ->with('digitalMedia.creatorProfile')->latest('granted_at')->get();
+        $creatorSales = collect();
         $creatorStats = ['sales' => 0, 'gross_minor' => 0, 'net_minor' => 0];
         $creatorFinance = [
             'pending_minor' => 0,
@@ -183,6 +184,13 @@ class MarketplaceController extends Controller
                 ->where('creator_ledger_accounts.creator_profile_id', $profile->id)
                 ->where('fund_holds.status', 'pending')
                 ->sum('fund_holds.amount_minor');
+            $creatorSales = OrderItem::query()
+                ->where('creator_profile_id', $profile->id)
+                ->whereHas('order', fn ($query) => $query->where('status', 'captured'))
+                ->with('order:id,order_reference,status,currency,created_at')
+                ->latest('created_at')
+                ->limit(20)
+                ->get();
             $totals = OrderItem::query()
                 ->join('orders', 'orders.id', '=', 'order_items.order_id')
                 ->where('order_items.creator_profile_id', $profile->id)
@@ -195,7 +203,7 @@ class MarketplaceController extends Controller
                 'net_minor' => (int) $totals->net_minor,
             ];
         }
-        return view('marketplace.dashboard', compact('profile','media','library','creatorStats','creatorFinance'));
+        return view('marketplace.dashboard', compact('profile','media','library','creatorStats','creatorFinance','creatorSales'));
     }
 
     public function purchaseHistory(Request $request)
