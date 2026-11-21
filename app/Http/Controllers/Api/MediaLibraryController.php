@@ -31,6 +31,7 @@ class MediaLibraryController extends Controller
         $media = DigitalMedia::where('slug', $slug)
             ->where('status', 'published')
             ->where('visibility', 'free')
+            ->whereHas('creatorProfile', fn ($query) => $query->where('status', 'approved')->whereHas('user', fn ($user) => $user->where('account_status', 'active')))
             ->firstOrFail();
 
         $grant = DB::transaction(function () use ($request, $media): MediaAccessGrant {
