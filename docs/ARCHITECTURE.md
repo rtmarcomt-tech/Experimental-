@@ -126,7 +126,7 @@ Calculate reconciled available balance -> enforce minimum and account checks -> 
 - Commission calculator in integer minor units with half-up rounding and invariant tests.
 
 ## Not implemented yet
-- Refund and dispute workflows, reserve/debt handling and compensating ledger entries.
+- Refund and dispute orchestration, reserve/debt handling and compensating ledger entries (the PayPal capture-refund client operation for full and partial refunds is implemented and covered by feature tests; the financial reconciliation workflow remains outstanding).
 - Creator payout requests, PayPal Payouts account eligibility checks and reconciliation.
 - Full administrator and creator web interfaces.
 - Media transcoding, thumbnail/preview generation and malware scanning pipeline.
