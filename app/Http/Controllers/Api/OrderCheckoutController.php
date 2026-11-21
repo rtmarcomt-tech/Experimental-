@@ -4,18 +4,15 @@ namespace App\Http\Controllers\Api;
 
 use App\Domain\Finance\CommissionCalculator;
 use App\Http\Controllers\Controller;
-use App\Models\CreatorLedgerAccount;
-use App\Models\CreatorLedgerEntry;
 use App\Models\DigitalMedia;
-use App\Models\FundHold;
 use App\Models\MediaAccessGrant;
 use App\Models\Order;
 use App\Models\OrderItem;
 use App\Models\PaymentTransaction;
+use App\Services\Payments\CaptureFinalizer;
 use App\Services\Payments\PayPalClient;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
 use Throwable;
@@ -126,7 +123,7 @@ class OrderCheckoutController extends Controller
         }
     }
 
-    public function capture(Request $request, string $reference, PayPalClient $paypal): JsonResponse
+    public function capture(Request $request, string $reference, PayPalClient $paypal, CaptureFinalizer $finalizer): JsonResponse
     {
         $order = Order::where('order_reference', $reference)
             ->where('buyer_id', $request->user()->id)
@@ -166,66 +163,12 @@ class OrderCheckoutController extends Controller
             return response()->json(['message' => 'PayPal captured amount does not match the order total.'], 409);
         }
 
-        DB::transaction(function () use ($order, $captureId): void {
-            $lockedOrder = Order::whereKey($order->id)->lockForUpdate()->firstOrFail();
-            if ($lockedOrder->status === 'captured') {
-                return;
-            }
-
-            $item = $lockedOrder->item()->firstOrFail();
-            $payment = PaymentTransaction::where('order_reference', $lockedOrder->order_reference)->lockForUpdate()->firstOrFail();
-            $now = now();
-
-            $payment->update([
-                'provider_capture_id' => $captureId,
-                'status' => 'captured',
-                'captured_at' => $now,
-            ]);
-
-            MediaAccessGrant::firstOrCreate(
-                ['buyer_id' => $lockedOrder->buyer_id, 'digital_media_id' => $item->digital_media_id],
-                [
-                    'payment_transaction_id' => $payment->id,
-                    'grant_type' => 'paid',
-                    'granted_at' => $now,
-                ]
-            );
-
-            if ($item->creator_net_minor > 0) {
-                $account = CreatorLedgerAccount::firstOrCreate([
-                    'creator_profile_id' => $item->creator_profile_id,
-                    'currency' => $item->currency,
-                    'account_type' => 'pending',
-                ]);
-
-                $entry = CreatorLedgerEntry::firstOrCreate(
-                    ['idempotency_key' => 'sale-'.$payment->id.'-creator-net'],
-                    [
-                        'ledger_account_id' => $account->id,
-                        'payment_transaction_id' => $payment->id,
-                        'entry_type' => 'sale_credit_pending',
-                        'amount_minor' => $item->creator_net_minor,
-                        'currency' => $item->currency,
-                        'reference_type' => 'order',
-                        'reference_id' => $lockedOrder->order_reference,
-                        'effective_at' => $now,
-                    ]
-                );
-
-                FundHold::firstOrCreate(
-                    ['ledger_entry_id' => $entry->id],
-                    [
-                        'amount_minor' => $item->creator_net_minor,
-                        'currency' => $item->currency,
-                        'release_at' => $now->copy()->addDays((int) config('marketplace.hold_days', 14)),
-                        'status' => 'pending',
-                        'reason' => 'refund_dispute_window',
-                    ]
-                );
-            }
-
-            $lockedOrder->update(['status' => 'captured']);
-        });
+        $finalizer->finalize(
+            $order->paypal_order_id,
+            $captureId,
+            $paypal->parseMinor($amount),
+            $currency
+        );
 
         return response()->json(['order_reference' => $order->order_reference, 'status' => 'captured'], 200);
     }
