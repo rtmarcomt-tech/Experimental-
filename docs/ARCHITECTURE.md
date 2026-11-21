@@ -101,13 +101,33 @@ Calculate reconciled available balance -> enforce minimum and account checks -> 
 - Duplicate webhook event IDs are deduplicated. PAYMENT.CAPTURE.COMPLETED can finalize a payment if the buyer return flow does not.
 - Currency handling is deliberately restricted to EUR with two minor-unit decimal places in this initial checkout implementation.
 
+## Entitlement-controlled delivery
+
+- Buyers have a private library of active media access grants.
+- Free published media can be claimed by an authenticated buyer without creating a payment or financial ledger entry.
+- Paid grants are created only after confirmed PayPal capture.
+- Original downloads require an active grant belonging to the authenticated buyer and a published media record.
+- Original objects are streamed from private storage; storage keys and public original URLs are never returned.
+- Download events record grant, asset, timestamp and keyed hashes of IP/user-agent rather than raw network identifiers.
+
 ## Implemented in current bootstrap
 - Laravel application skeleton and configuration.
-- User, creator profile and verification case schema.
-- Digital media and private asset metadata schema.
-- Payment transaction, access grant, ledger account/entry, fund hold and PayPal webhook event schema.
-- Creator eligibility rule for paid media.
+- Sanctum registration, login and token revocation.
+- Creator profile, identity verification case and private identity-document schema/API.
+- Administrator-only creator review and approval/rejection workflow.
+- Digital media, private original assets, previews and rights declaration schema/API.
+- Public catalogue and preview-only delivery for published items.
+- One-item orders and order-item snapshots.
+- PayPal OAuth, Orders v2 create/capture and webhook signature verification.
+- Capture validation, idempotent entitlement creation, creator pending-ledger credit and configurable hold creation.
+- Free-content claims, buyer library and entitlement-controlled original downloads.
+- Download audit events with minimized identifiers.
 - Commission calculator in integer minor units with half-up rounding and invariant tests.
 
 ## Not implemented yet
-Checkout/order orchestration, PayPal API client and webhook signature verification, creator approval workflow endpoints, upload pipeline, download authorization controller, ledger posting service, hold release worker, refunds/disputes, payout workflows, admin UI, and production hardening.
+- Automated hold release and pending-to-available ledger transfer.
+- Refund and dispute workflows, reserve/debt handling and compensating ledger entries.
+- Creator payout requests, PayPal Payouts account eligibility checks and reconciliation.
+- Full administrator and creator web interfaces.
+- Media transcoding, thumbnail/preview generation and malware scanning pipeline.
+- Production hardening, observability, backups, privacy retention automation and end-to-end testing against the owner's PayPal Sandbox app.
