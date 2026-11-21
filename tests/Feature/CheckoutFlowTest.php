@@ -39,7 +39,7 @@ class CheckoutFlowTest extends TestCase
 
     public function test_checkout_creates_one_paypal_order_with_a_frozen_commission_split(): void
     {
-        $buyer = User::create(['name' => 'Buyer', 'email' => 'buyer-checkout@example.test', 'password' => 'password-long-enough']);
+        $buyer = User::create(['name' => 'Buyer', 'email' => 'buyer-checkout@example.test', 'password' => 'password-long-enough', 'account_type' => 'user']);
         $media = $this->createPaidMedia();
         Sanctum::actingAs($buyer);
 
@@ -74,7 +74,7 @@ class CheckoutFlowTest extends TestCase
 
     public function test_checkout_idempotency_returns_the_existing_paypal_order(): void
     {
-        $buyer = User::create(['name' => 'Buyer', 'email' => 'buyer-idempotent@example.test', 'password' => 'password-long-enough']);
+        $buyer = User::create(['name' => 'Buyer', 'email' => 'buyer-idempotent@example.test', 'password' => 'password-long-enough', 'account_type' => 'user']);
         $media = $this->createPaidMedia();
         Sanctum::actingAs($buyer);
         $this->fakePayPal();
@@ -90,7 +90,7 @@ class CheckoutFlowTest extends TestCase
 
     public function test_completed_capture_grants_access_and_places_creator_net_on_hold_once(): void
     {
-        $buyer = User::create(['name' => 'Buyer', 'email' => 'buyer-capture@example.test', 'password' => 'password-long-enough']);
+        $buyer = User::create(['name' => 'Buyer', 'email' => 'buyer-capture@example.test', 'password' => 'password-long-enough', 'account_type' => 'user']);
         $media = $this->createPaidMedia();
         Sanctum::actingAs($buyer);
         $this->fakePayPal(withCapture: true);
@@ -127,7 +127,7 @@ class CheckoutFlowTest extends TestCase
 
     public function test_paypal_amount_mismatch_never_grants_media_access(): void
     {
-        $buyer = User::create(['name' => 'Buyer', 'email' => 'buyer-mismatch@example.test', 'password' => 'password-long-enough']);
+        $buyer = User::create(['name' => 'Buyer', 'email' => 'buyer-mismatch@example.test', 'password' => 'password-long-enough', 'account_type' => 'user']);
         $media = $this->createPaidMedia();
         Sanctum::actingAs($buyer);
         $this->fakePayPal(withCapture: true, captureAmount: '12.49');
@@ -144,7 +144,7 @@ class CheckoutFlowTest extends TestCase
 
     public function test_verified_paypal_webhook_finalizes_capture_once(): void
     {
-        $buyer = User::create(['name' => 'Buyer', 'email' => 'buyer-webhook@example.test', 'password' => 'password-long-enough']);
+        $buyer = User::create(['name' => 'Buyer', 'email' => 'buyer-webhook@example.test', 'password' => 'password-long-enough', 'account_type' => 'user']);
         $media = $this->createPaidMedia();
         Sanctum::actingAs($buyer);
         config(['paypal.webhook_id' => 'WEBHOOK-ID-001']);
@@ -198,7 +198,7 @@ class CheckoutFlowTest extends TestCase
 
     public function test_creator_cannot_purchase_own_paid_media(): void
     {
-        $creator = User::create(['name' => 'Seller', 'email' => 'seller-self@example.test', 'password' => 'password-long-enough']);
+        $creator = User::create(['name' => 'Seller', 'email' => 'seller-self@example.test', 'password' => 'password-long-enough', 'account_type' => 'creator']);
         $profile = CreatorProfile::create([
             'user_id' => $creator->id,
             'public_name' => 'Seller',
@@ -279,7 +279,7 @@ class CheckoutFlowTest extends TestCase
 
     private function createPaidMedia(): DigitalMedia
     {
-        $seller = User::create(['name' => 'Seller', 'email' => 'seller-'.uniqid().'@example.test', 'password' => 'password-long-enough']);
+        $seller = User::create(['name' => 'Seller', 'email' => 'seller-'.uniqid().'@example.test', 'password' => 'password-long-enough', 'account_type' => 'creator']);
         $profile = CreatorProfile::create([
             'user_id' => $seller->id,
             'public_name' => 'Seller',
