@@ -28,22 +28,26 @@ Route::post('/auth/login', [AuthController::class, 'login'])->middleware('thrott
 
 Route::middleware('auth:sanctum')->group(function (): void {
     Route::post('/auth/logout', [AuthController::class, 'logout']);
-    Route::get('/creator/application', [CreatorApplicationController::class, 'show']);
-    Route::post('/creator/application', [CreatorApplicationController::class, 'submit']);
-    Route::post('/creator/application/documents', [CreatorVerificationDocumentController::class, 'store'])
-        ->middleware('throttle:10,1');
-    Route::get('/creator/media', [CreatorMediaController::class, 'index']);
-    Route::post('/creator/media', [CreatorMediaController::class, 'store'])->middleware('throttle:10,1');
-    Route::get('/creator/media/{media}', [CreatorMediaController::class, 'show']);
-    Route::patch('/creator/media/{media}', [CreatorMediaController::class, 'update']);
-    Route::post('/creator/media/{media}/rights', [CreatorMediaPublicationController::class, 'declareRights']);
-    Route::post('/creator/media/{media}/preview', [CreatorMediaPublicationController::class, 'uploadPreview']);
-    Route::post('/creator/media/{media}/publish', [CreatorMediaPublicationController::class, 'publish']);
-    Route::post('/media/{slug}/checkout', [OrderCheckoutController::class, 'create'])->middleware('throttle:10,1');
-    Route::post('/orders/{reference}/capture', [OrderCheckoutController::class, 'capture'])->middleware('throttle:10,1');
-    Route::get('/library', [MediaLibraryController::class, 'index']);
-    Route::post('/media/{slug}/claim', [MediaLibraryController::class, 'claimFree']);
-    Route::get('/library/{media}/download', [MediaLibraryController::class, 'download'])->middleware('throttle:30,1');
+    Route::middleware('account:creator')->group(function (): void {
+        Route::get('/creator/application', [CreatorApplicationController::class, 'show']);
+        Route::post('/creator/application', [CreatorApplicationController::class, 'submit']);
+        Route::post('/creator/application/documents', [CreatorVerificationDocumentController::class, 'store'])->middleware('throttle:10,1');
+        Route::get('/creator/media', [CreatorMediaController::class, 'index']);
+        Route::post('/creator/media', [CreatorMediaController::class, 'store'])->middleware('throttle:10,1');
+        Route::get('/creator/media/{media}', [CreatorMediaController::class, 'show']);
+        Route::patch('/creator/media/{media}', [CreatorMediaController::class, 'update']);
+        Route::post('/creator/media/{media}/rights', [CreatorMediaPublicationController::class, 'declareRights']);
+        Route::post('/creator/media/{media}/preview', [CreatorMediaPublicationController::class, 'uploadPreview']);
+        Route::post('/creator/media/{media}/publish', [CreatorMediaPublicationController::class, 'publish']);
+    });
+
+    Route::middleware('account:user')->group(function (): void {
+        Route::post('/media/{slug}/checkout', [OrderCheckoutController::class, 'create'])->middleware('throttle:10,1');
+        Route::post('/orders/{reference}/capture', [OrderCheckoutController::class, 'capture'])->middleware('throttle:10,1');
+        Route::get('/library', [MediaLibraryController::class, 'index']);
+        Route::post('/media/{slug}/claim', [MediaLibraryController::class, 'claimFree']);
+        Route::get('/library/{media}/download', [MediaLibraryController::class, 'download'])->middleware('throttle:30,1');
+    });
 });
 
 Route::prefix('admin')
