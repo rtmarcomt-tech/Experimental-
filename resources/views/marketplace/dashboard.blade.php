@@ -4,8 +4,7 @@
 <div class="wrap page">
     <div class="eyebrow">Área pessoal</div>
     <h1 class="page-title">Olá, {{ auth()->user()->name }}.</h1>
-    <p class="muted">A tua biblioteca e o teu espaço de criador.</p>
-    <p><a class="btn secondary" href="{{ route('purchases.index') }}">Consultar histórico de compras</a></p>
+    <p class="muted">O teu espaço de gestão de criador.</p>
 
     <section class="panel">
         <div class="row">
@@ -179,24 +178,6 @@
         </section>
     @endif
 
-    <section>
-        <div class="section-head"><div><div class="eyebrow">Biblioteca</div><h2>Os meus conteúdos adquiridos</h2></div></div>
-        @if($library->count())
-            <div class="grid">
-                @foreach($library as $grant)
-                    <div class="product">
-                        <div class="placeholder">{{ strtoupper($grant->digitalMedia->type) }}</div>
-                        <div class="product-info">
-                            <h3>{{ $grant->digitalMedia->title }}</h3>
-                            <div class="muted">{{ $grant->digitalMedia->creatorProfile->public_name }}</div>
-                            <a class="btn secondary" style="margin-top:14px" href="{{ route('library.download',$grant->digital_media_id) }}">Transferir ficheiro</a>
-                        </div>
-                    </div>
-                @endforeach
-            </div>
-        @else
-            <div class="empty">A tua biblioteca ainda está vazia. Explora o catálogo para descobrir conteúdos.</div>
-        @endif
-    </section>
+    {{-- A biblioteca de compras pertence exclusivamente à área USER. --}}
 </div>
 @endsection
