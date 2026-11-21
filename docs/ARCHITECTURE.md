@@ -67,6 +67,17 @@ Persist provider event -> freeze affected pending/available amount -> reconcile 
 ### Creator payout
 Calculate reconciled available balance -> enforce minimum and account checks -> create idempotent payout request -> administrator approval if required -> use PayPal Payouts only if account is eligible, otherwise audited manual payout -> reconcile and post paid entry.
 
+## Creator verification API
+
+- Account registration and login issue Sanctum personal access tokens.
+- Authenticated users can submit one creator application; rejected applications may be resubmitted.
+- A submitted application is always pending and does not grant publishing privileges.
+- Identity evidence is uploaded separately and stored on the private storage disk; only an administrator route can download it.
+- Only users with the server-side `is_admin` flag can review verification cases.
+- Approval is blocked until an identity document is present. Rejections require an administrator reason.
+- The review decision and creator profile status are updated in one database transaction.
+- The public registration endpoint cannot set administrative privileges.
+
 ## Implemented in current bootstrap
 - Laravel application skeleton and configuration.
 - User, creator profile and verification case schema.
