@@ -69,11 +69,11 @@ class MediaLibraryController extends Controller
         $grant = MediaAccessGrant::where('buyer_id', $request->user()->id)
             ->where('digital_media_id', $media)
             ->whereNull('revoked_at')
-            ->with('digitalMedia')
+            ->with('digitalMedia.creatorProfile.user')
             ->firstOrFail();
 
         $item = $grant->digitalMedia;
-        abort_unless($item && $item->status === 'published', 404);
+        abort_unless($item && $item->status === 'published' && $item->creatorProfile?->canSell(), 404);
 
         $asset = $item->assets()->where('purpose', 'original')->latest('id')->firstOrFail();
         $disk = Storage::disk($asset->disk);
