@@ -23,14 +23,35 @@
         @endif
 
         @if($profile && $profile->status === 'approved')
-            <h3 style="font:22px Georgia,serif;margin-top:28px">Os meus conteúdos</h3>
-            <div class="row"><span class="muted">{{ $media->count() }} conteúdos</span><a href="#novo-conteudo" class="btn">Publicar conteúdo</a></div>
+            <p style="margin-top:14px"><a class="btn secondary" href="{{ route('creator.show',$profile->slug) }}">Ver perfil público</a></p>
+            <h3 style="font:22px Georgia,serif;margin-top:28px">Identidade pública</h3>
+            <form method="post" action="{{ route('creator.profile.update') }}" enctype="multipart/form-data">
+                @csrf
+                <div class="field"><label>Fotografia de perfil</label><input type="file" name="profile_photo" accept=".jpg,.jpeg,.png,.webp"></div>
+                <div class="field"><label>Apresentação curta</label><input name="presentation" maxlength="180" value="{{ old('presentation',$profile->presentation) }}" placeholder="Uma frase de apresentação"></div>
+                <div class="field"><label>Biografia curta</label><textarea name="bio" maxlength="280">{{ old('bio',$profile->bio) }}</textarea></div>
+                <button class="btn secondary">Guardar identidade pública</button>
+            </form>
+            <h3 style="font:22px Georgia,serif;margin-top:28px">A minha biblioteca de conteúdos</h3>
+            <div class="row"><span class="muted">{{ $media->count() }} conteúdos</span><a href="#novo-conteudo" class="btn">Adicionar à biblioteca</a></div>
             @if($media->count())
                 <table class="table">
                     <thead><tr><th>Título</th><th>Formato</th><th>Estado</th><th>Visibilidade</th></tr></thead>
                     <tbody>
                     @foreach($media as $item)
-                        <tr><td>{{ $item->title }}</td><td>{{ $item->type }}</td><td>{{ $item->status }}</td><td>{{ $item->visibility }}</td></tr>
+                        <tr>
+                            <td>{{ $item->title }}</td><td>{{ $item->type }}</td><td>{{ $item->status === 'draft' ? 'Na biblioteca' : 'Publicado' }}</td>
+                            <td>
+                                @if($item->status === 'draft')
+                                    <form method="post" action="{{ route('creator.media.offer',$item->id) }}" class="library-offer">@csrf
+                                        <select name="visibility"><option value="free" @selected($item->visibility==='free')>Gratuito</option><option value="paid" @selected($item->visibility==='paid')>Pago</option></select>
+                                        <input type="number" name="price_eur" min="0.01" step="0.01" placeholder="Preço €" value="{{ $item->price_minor ? number_format($item->price_minor/100,2,'.','') : '' }}">
+                                        <button class="btn secondary">Guardar oferta</button>
+                                    </form>
+                                    <form method="post" action="{{ route('creator.media.publish',$item->id) }}" style="margin-top:7px">@csrf<button class="btn accent">Publicar no perfil</button></form>
+                                @else<span>{{ $item->visibility==='free'?'Gratuito':'Pago' }}</span>@endif
+                            </td>
+                        </tr>
                     @endforeach
                     </tbody>
                 </table>
