@@ -90,6 +90,7 @@ class MarketplaceController extends Controller
     public function showMedia(string $slug)
     {
         $media = DigitalMedia::where('slug', $slug)->where('status', 'published')
+            ->whereHas('creatorProfile', fn ($query) => $query->where('status', 'approved')->whereHas('user', fn ($user) => $user->where('account_status', 'active')))
             ->with(['creatorProfile:id,public_name,slug', 'assets' => fn ($q) => $q->where('purpose', 'preview')->latest('id')])
             ->firstOrFail();
         return view('marketplace.media', compact('media'));
@@ -376,6 +377,16 @@ class MarketplaceController extends Controller
         return redirect()->route('creator.show', $profile->slug)->with('success', 'Conteúdo publicado no teu perfil.');
     }
 
+    public function unpublishMedia(Request $request, int $media)
+    {
+        $profile = $request->user()->creatorProfile;
+        abort_unless($profile && $profile->canSell(), 403);
+        $item = $profile->media()->where('status', 'published')->findOrFail($media);
+        $item->update(['status' => 'draft', 'published_at' => null]);
+
+        return redirect()->route('dashboard')->with('success', 'Conteúdo retirado do perfil público e devolvido à tua biblioteca.');
+    }
+
     public function checkout(Request $request, string $slug, PayPalClient $paypal, CommissionCalculator $calculator)
     {
         $request->headers->set('Idempotency-Key', (string) Str::uuid());
@@ -412,7 +423,9 @@ class MarketplaceController extends Controller
 
     public function claimFree(Request $request, string $slug)
     {
-        $media = DigitalMedia::where('slug', $slug)->where('status', 'published')->where('visibility', 'free')->firstOrFail();
+        $media = DigitalMedia::where('slug', $slug)->where('status', 'published')->where('visibility', 'free')
+            ->whereHas('creatorProfile', fn ($query) => $query->where('status', 'approved')->whereHas('user', fn ($user) => $user->where('account_status', 'active')))
+            ->firstOrFail();
         DB::transaction(function () use ($request, $media) {
             $grant = MediaAccessGrant::where('buyer_id', $request->user()->id)->where('digital_media_id', $media->id)->lockForUpdate()->first();
             if ($grant) {
