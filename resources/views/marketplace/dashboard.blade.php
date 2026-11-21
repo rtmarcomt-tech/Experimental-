@@ -35,7 +35,7 @@
                 <div class="eyebrow">Conta de criador</div>
                 <h3 style="font:22px Georgia,serif;margin:8px 0 16px">Resumo financeiro</h3>
                 <div class="stats">
-                    <div class="stat"><strong>{{ number_format($creatorFinance['pending_minor']/100,2,',','.') }} €</strong><span>Saldo pendente</span></div>
+                    <div class="stat"><strong>{{ number_format($creatorFinance['pending_minor']/100,2,',','.') }} €</strong><span>Saldo pendente, excluindo retenções</span></div>
                     <div class="stat"><strong>{{ number_format($creatorFinance['held_minor']/100,2,',','.') }} €</strong><span>Em período de retenção</span></div>
                     <div class="stat"><strong>{{ number_format($creatorFinance['available_minor']/100,2,',','.') }} €</strong><span>Saldo disponível</span></div>
                 </div>
