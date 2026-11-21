@@ -106,7 +106,7 @@ class MarketplaceDashboardTest extends TestCase
             ->assertSee('90,00 €')
             ->assertSee('30,00 €')
             ->assertSee('Saldo disponível')
-            ->assertSee('saldo disponível atinja o mínimo configurado')
-            ->assertSee('endereço PayPal válido');
+            ->assertSee('pode ser solicitado quando atinge o mínimo configurado')
+            ->assertSee('existe um endereço PayPal válido');
     }
 }
