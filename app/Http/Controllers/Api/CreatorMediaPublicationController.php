@@ -93,6 +93,7 @@ class CreatorMediaPublicationController extends Controller
     {
         $items = DigitalMedia::query()
             ->where('status', 'published')
+            ->whereHas('creatorProfile', fn ($query) => $query->where('status', 'approved')->whereHas('user', fn ($user) => $user->where('account_status', 'active')))
             ->with('creatorProfile:id,public_name,slug')
             ->select(['id', 'creator_profile_id', 'type', 'title', 'slug', 'description', 'visibility', 'price_minor', 'currency', 'published_at'])
             ->latest('published_at')
@@ -118,7 +119,7 @@ class CreatorMediaPublicationController extends Controller
 
     public function publicPreview(string $slug)
     {
-        $item = DigitalMedia::where('slug', $slug)->where('status', 'published')->firstOrFail();
+        $item = DigitalMedia::where('slug', $slug)->where('status', 'published')->whereHas('creatorProfile', fn ($query) => $query->where('status', 'approved')->whereHas('user', fn ($user) => $user->where('account_status', 'active')))->firstOrFail();
         $asset = $item->assets()->where('purpose', 'preview')->latest('id')->firstOrFail();
 
         return Storage::disk($asset->disk)->response($asset->object_key, null, [
