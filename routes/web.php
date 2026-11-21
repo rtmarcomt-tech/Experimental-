@@ -22,6 +22,7 @@ Route::middleware('auth')->group(function (): void {
     Route::get('/compras/{reference}', [MarketplaceController::class, 'purchaseDetail'])->name('purchases.show');
     Route::post('/candidatura-criador', [MarketplaceController::class, 'applyCreator'])->name('creator.apply');
     Route::post('/criador/perfil', [MarketplaceController::class, 'updateCreatorProfile'])->name('creator.profile.update');
+    Route::post('/criador/pagamentos', [CreatorPayoutController::class, 'store'])->name('creator.payouts.store')->middleware('throttle:3,60');
     Route::post('/criador/conteudos', [MarketplaceController::class, 'uploadMedia'])->name('creator.media.store');
     Route::post('/criador/conteudos/{media}/oferta', [MarketplaceController::class, 'updateMediaOffer'])->name('creator.media.offer');
     Route::post('/criador/conteudos/{media}/publicar', [MarketplaceController::class, 'publishMedia'])->name('creator.media.publish');
@@ -35,4 +36,6 @@ Route::middleware('auth')->group(function (): void {
 Route::prefix('admin')->middleware(['auth','admin'])->group(function (): void {
     Route::get('/documentos/{document}', [MarketplaceController::class, 'verificationDocument'])->name('admin.document');
     Route::post('/criadores/{case}/decisao', [MarketplaceController::class, 'decideCreator'])->name('admin.creator.decide');
+    Route::post('/pagamentos/{payout}/enviar', [AdminCreatorPayoutController::class, 'submit'])->name('admin.payouts.submit')->middleware('throttle:5,1');
+    Route::post('/pagamentos/{payout}/reconciliar', [AdminCreatorPayoutController::class, 'reconcile'])->name('admin.payouts.reconcile')->middleware('throttle:10,1');
 });
