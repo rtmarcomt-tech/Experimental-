@@ -114,13 +114,15 @@ class MarketplaceController extends Controller
         $data = $request->validate([
             'name' => ['required','string','max:120'],
             'email' => ['required','email','max:255','unique:users,email'],
-            'password' => ['required','string','min:10','confirmed'],\n            'account_type' => ['required','in:user,creator'],
+            'password' => ['required','string','min:10','confirmed'],
+            'account_type' => ['required','in:user,creator'],\n            'account_type' => ['required','in:user,creator'],
         ]);
         $user = User::create([
             'name' => $data['name'],
             'email' => $data['email'],
             'password' => Hash::make($data['password']),
-            'account_status' => 'active',\n            'account_type' => $data['account_type'],
+            'account_status' => 'active',
+            'account_type' => $data['account_type'],\n            'account_type' => $data['account_type'],
         ]);
         Auth::login($user);
         $request->session()->regenerate();
