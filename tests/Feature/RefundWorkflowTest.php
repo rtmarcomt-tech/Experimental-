@@ -111,8 +111,8 @@ class RefundWorkflowTest extends TestCase
             'marketplace.hold_days' => 14,
         ]);
 
-        $buyer = User::create(['name' => 'Buyer', 'email' => $prefix.'-buyer@example.test', 'password' => 'password-long-enough']);
-        $seller = User::create(['name' => 'Seller', 'email' => $prefix.'-seller@example.test', 'password' => 'password-long-enough']);
+        $buyer = User::create(['name' => 'Buyer', 'email' => $prefix.'-buyer@example.test', 'password' => 'password-long-enough', 'account_type' => 'user']);
+        $seller = User::create(['name' => 'Seller', 'email' => $prefix.'-seller@example.test', 'password' => 'password-long-enough', 'account_type' => 'creator']);
         $profile = CreatorProfile::create([
             'user_id' => $seller->id,
             'public_name' => 'Seller',
