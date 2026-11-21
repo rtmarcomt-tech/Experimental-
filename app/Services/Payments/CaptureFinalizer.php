@@ -39,14 +39,28 @@ class CaptureFinalizer
                 'captured_at' => $now,
             ]);
 
-            MediaAccessGrant::firstOrCreate(
-                ['buyer_id' => $lockedOrder->buyer_id, 'digital_media_id' => $item->digital_media_id],
-                [
+            $grant = MediaAccessGrant::where('buyer_id', $lockedOrder->buyer_id)
+                ->where('digital_media_id', $item->digital_media_id)
+                ->lockForUpdate()
+                ->first();
+
+            if (! $grant) {
+                MediaAccessGrant::create([
+                    'buyer_id' => $lockedOrder->buyer_id,
+                    'digital_media_id' => $item->digital_media_id,
                     'payment_transaction_id' => $lockedPayment->id,
                     'grant_type' => 'paid',
                     'granted_at' => $now,
-                ]
-            );
+                ]);
+            } elseif ($grant->revoked_at !== null) {
+                $grant->update([
+                    'payment_transaction_id' => $lockedPayment->id,
+                    'grant_type' => 'paid',
+                    'granted_at' => $now,
+                    'revoked_at' => null,
+                    'revocation_reason' => null,
+                ]);
+            }
 
             if ($item->creator_net_minor > 0) {
                 $account = CreatorLedgerAccount::firstOrCreate([
