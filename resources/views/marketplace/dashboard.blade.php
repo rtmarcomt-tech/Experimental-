@@ -66,6 +66,31 @@
             @else
                 <div class="empty">Ainda não existem vendas confirmadas.</div>
             @endif
+            <div class="panel" style="margin:20px 0">
+                <div class="eyebrow">Liquidação</div>
+                <h3 style="font:22px Georgia,serif;margin:8px 0">Pagamentos ao criador</h3>
+                <p class="muted">O pedido utiliza o saldo disponível integral, desde que atinja o mínimo configurado. O valor fica reservado até o PayPal confirmar o pagamento; se falhar, regressa ao saldo disponível.</p>
+                <p><strong>Conta PayPal:</strong> {{ $profile->payout_email ?: 'Ainda não definida' }}</p>
+                @if($creatorFinance['available_minor'] >= (int) config('marketplace.payout_minimum_minor',5000) && $profile->payout_email)
+                    <form method="post" action="{{ route('creator.payouts.store') }}" onsubmit="return confirm('Pretendes solicitar o pagamento de todo o saldo disponível?')">
+                        @csrf
+                        <button class="btn accent">Solicitar pagamento de {{ number_format($creatorFinance['available_minor']/100,2,',','.') }} €</button>
+                    </form>
+                @else
+                    <p class="muted">Para solicitar um pagamento, define primeiro o email PayPal e aguarda que o saldo disponível atinja {{ number_format(config('marketplace.payout_minimum_minor',5000)/100,2,',','.') }} €.</p>
+                @endif
+                @if($creatorPayouts->count())
+                    <h4>Pedidos recentes</h4>
+                    <div style="overflow:auto"><table class="table">
+                        <thead><tr><th>Data</th><th>Montante</th><th>Destino</th><th>Estado</th></tr></thead>
+                        <tbody>
+                        @foreach($creatorPayouts as $payout)
+                            <tr><td>{{ $payout->requested_at?->format('d/m/Y H:i') }}</td><td>{{ number_format($payout->amount_minor/100,2,',','.') }} {{ $payout->currency }}</td><td>{{ $payout->recipient_email }}</td><td>{{ match($payout->status) {'requested'=>'Em validação','processing'=>'Em processamento','submission_unknown'=>'A confirmar com PayPal','paid'=>'Pago','failed'=>'Falhou',default=>$payout->status} }}</td></tr>
+                        @endforeach
+                        </tbody>
+                    </table></div>
+                @endif
+            </div>
             <h3 style="font:22px Georgia,serif;margin-top:28px">Identidade pública</h3>
             <form method="post" action="{{ route('creator.profile.update') }}" enctype="multipart/form-data">
                 @csrf
@@ -74,6 +99,8 @@
                 <div class="field"><label>Nome público</label><input name="public_name" maxlength="120" required value="{{ old('public_name',$profile->public_name) }}"></div>
                 <div class="field"><label>Apresentação curta</label><input name="presentation" maxlength="180" value="{{ old('presentation',$profile->presentation) }}" placeholder="Uma frase de apresentação"></div>
                 <div class="field"><label>Biografia curta</label><textarea name="bio" maxlength="280">{{ old('bio',$profile->bio) }}</textarea></div>
+                <div class="field"><label>Email da conta PayPal para receber pagamentos</label><input type="email" name="payout_email" maxlength="255" value="{{ old('payout_email',$profile->payout_email) }}" placeholder="email@exemplo.com"></div>
+                <p class="muted">Confirma que este endereço corresponde à conta PayPal onde pretendes receber os pagamentos.</p>
                 <button class="btn secondary">Guardar identidade pública</button>
             </form>
             <h3 style="font:22px Georgia,serif;margin-top:28px">A minha biblioteca de conteúdos</h3>
