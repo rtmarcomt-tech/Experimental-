@@ -28,7 +28,7 @@
                 <div class="stat"><strong>{{ $creatorStats['sales'] }}</strong><span>Vendas confirmadas</span></div>
                 <div class="stat"><strong>{{ number_format($creatorStats['gross_minor']/100,2,',','.') }} €</strong><span>Volume de vendas</span></div>
                 <div class="stat"><strong>{{ number_format($creatorStats['net_minor']/100,2,',','.') }} €</strong><span>Valor líquido atribuído</span></div>
-                <div class="stat"><strong>10%</strong><span>Comissão da plataforma</span></div>
+                <div class="stat"><strong>{{ number_format(config('marketplace.commission_bps', 1000) / 100, 1, ',', '.') }}%</strong><span>Comissão da plataforma</span></div>
             </div>
             <p class="muted">Os valores apresentados correspondem a vendas confirmadas. Não representam necessariamente saldo já disponível para levantamento; os fundos podem estar sujeitos ao período de retenção.</p>
             <p style="margin-top:14px"><a class="btn secondary" href="{{ route('creator.show',$profile->slug) }}">Ver perfil público</a></p>
