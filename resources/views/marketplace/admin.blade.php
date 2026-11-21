@@ -80,7 +80,7 @@
                             <td>{{ $payout->recipient_email }}</td>
                             <td>{{ number_format($payout->amount_minor/100,2,',','.') }} {{ $payout->currency }}</td>
                             <td>{{ $payout->requested_at?->format('d/m/Y H:i') }}</td>
-                            <td>{{ match($payout->status) {'requested'=>'Por enviar','processing'=>'Em processamento','submission_unknown'=>'Envio por confirmar','paid'=>'Pago','failed'=>'Falhou',default=>$payout->status} }}</td>
+                            <td>{{ match($payout->status) {'requested'=>'Por enviar','processing'=>'Em processamento','submission_unknown'=>'Envio por confirmar','paid'=>'Pago','returned'=>'Devolvido','failed'=>'Falhou',default=>$payout->status} }}</td>
                             <td>
                                 @if(in_array($payout->status,['requested','submission_unknown'],true) || ($payout->status==='processing' && ! $payout->paypal_batch_id))
                                     <form method="post" action="{{ route('admin.payouts.submit',$payout->id) }}">@csrf<button class="btn accent">Enviar / repetir com segurança</button></form>
