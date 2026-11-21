@@ -29,6 +29,29 @@ class MarketplaceWebTest extends TestCase
         $this->get('/media/editorial-study')->assertOk()->assertSee('Editorial Study')->assertSee('Studio North');
     }
 
+    public function test_public_creator_profile_only_exposes_public_identity_and_separates_free_and_paid_media(): void
+    {
+        $seller = User::create(['name'=>'Private Legal Name','email'=>'profile-owner@example.test','password'=>'password-long-enough']);
+        $profile = CreatorProfile::create([
+            'user_id'=>$seller->id,'public_name'=>'Artistic Name','slug'=>'artistic-name','presentation'=>'Independent image maker',
+            'bio'=>'A short public biography.','status'=>'approved',
+        ]);
+        DigitalMedia::create([
+            'creator_profile_id'=>$profile->id,'type'=>'photo','title'=>'Free Work','slug'=>'free-work',
+            'visibility'=>'free','currency'=>'EUR','status'=>'published',
+        ]);
+        DigitalMedia::create([
+            'creator_profile_id'=>$profile->id,'type'=>'video','title'=>'Paid Work','slug'=>'paid-work',
+            'visibility'=>'paid','price_minor'=>1200,'currency'=>'EUR','status'=>'published',
+        ]);
+
+        $this->get('/criador/artistic-name')->assertOk()
+            ->assertSee('Artistic Name')->assertSee('Independent image maker')
+            ->assertSee('A short public biography.')
+            ->assertSee('Free Work')->assertSee('Paid Work')
+            ->assertDontSee('Private Legal Name');
+    }
+
     public function test_visitor_can_register_and_reach_personal_dashboard(): void
     {
         $this->post('/registar', [
