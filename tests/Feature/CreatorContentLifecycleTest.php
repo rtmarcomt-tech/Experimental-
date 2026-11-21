@@ -120,7 +120,14 @@ class CreatorContentLifecycleTest extends TestCase
             'published_at' => now(),
         ]);
 
-        $this->get('/criador/'.$profile->slug)->assertNotFound();
+        $buyer = User::create([
+            'name' => 'Buyer',
+            'email' => 'lifecycle-buyer@example.test',
+            'password' => 'password-long-enough',
+            'account_status' => 'active',
+        ]);
+
+        $this->actingAs($buyer)->get('/criador/'.$profile->slug)->assertNotFound();
         $this->get('/media/'.$media->slug)->assertNotFound();
         $this->post('/media/'.$media->slug.'/claim')->assertNotFound();
         $this->assertSame(0, MediaAccessGrant::where('digital_media_id', $media->id)->count());
@@ -152,7 +159,14 @@ class CreatorContentLifecycleTest extends TestCase
             'published_at' => now(),
         ]);
 
-        $this->get('/media/'.$media->slug)
+        $buyer = User::create([
+            'name' => 'Paid buyer',
+            'email' => 'lifecycle-paid-buyer@example.test',
+            'password' => 'password-long-enough',
+            'account_status' => 'active',
+        ]);
+
+        $this->actingAs($buyer)->get('/media/'.$media->slug)
             ->assertOk()
             ->assertSee('Compra individual disponível numa fase posterior.')
             ->assertDontSee('Comprar este conteúdo')
