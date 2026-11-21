@@ -106,7 +106,7 @@ class MarketplaceController extends Controller
             throw ValidationException::withMessages(['email' => ['As credenciais não são válidas.']]);
         }
         $request->session()->regenerate();
-        return redirect()->intended(route('dashboard'));
+        return redirect()->route('dashboard');
     }
 
     public function register(Request $request)
