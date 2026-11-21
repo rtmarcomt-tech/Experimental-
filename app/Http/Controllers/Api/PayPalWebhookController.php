@@ -1,17 +1,17 @@
 <?php
 
-namespace App\\Http\\Controllers\\Api;
+namespace App\Http\Controllers\Api;
 
-use App\\Http\\Controllers\\Controller;
-use App\\Models\\PaymentRefund;
-use App\\Models\\PaymentTransaction;
-use App\\Models\\PaypalWebhookEvent;
-use App\\Services\\Payments\\CaptureFinalizer;
-use App\\Services\\Payments\\PayPalClient;
-use App\\Services\\Payments\\RefundFinalizer;
-use Illuminate\\Http\\JsonResponse;
-use Illuminate\\Http\\Request;
-use Illuminate\\Support\\Facades\\DB;
+use App\Http\Controllers\Controller;
+use App\Models\PaymentRefund;
+use App\Models\PaymentTransaction;
+use App\Models\PaypalWebhookEvent;
+use App\Services\Payments\CaptureFinalizer;
+use App\Services\Payments\PayPalClient;
+use App\Services\Payments\RefundFinalizer;
+use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Throwable;
 
 class PayPalWebhookController extends Controller
@@ -86,7 +86,7 @@ class PayPalWebhookController extends Controller
                 $currency = data_get($resource, 'amount.currency_code');
 
                 if (! is_string($paypalOrderId) || ! is_string($captureId) || ! is_string($amount) || ! is_string($currency)) {
-                    throw new \\RuntimeException('PayPal capture webhook is missing required payment identifiers.');
+                    throw new \RuntimeException('PayPal capture webhook is missing required payment identifiers.');
                 }
 
                 $captureFinalizer->finalize($paypalOrderId, $captureId, $paypal->parseMinor($amount), $currency);
@@ -100,7 +100,7 @@ class PayPalWebhookController extends Controller
                 $captureId = is_string($captureUrl) ? basename(parse_url($captureUrl, PHP_URL_PATH) ?: '') : null;
 
                 if (! is_string($providerRefundId) || ! is_string($amount) || ! is_string($currency) || ! is_string($captureId) || $captureId === '') {
-                    throw new \\RuntimeException('PayPal refund webhook is missing its refund, capture or amount details.');
+                    throw new \RuntimeException('PayPal refund webhook is missing its refund, capture or amount details.');
                 }
 
                 $payment = PaymentTransaction::where('provider_capture_id', $captureId)->firstOrFail();
