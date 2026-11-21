@@ -1,14 +1,31 @@
 name: Marketplace CI
+
 on:
   push:
     branches: [main, "marketplace-digital/**"]
   pull_request:
     branches: [main]
+
 permissions:
   contents: read
+
 jobs:
   php:
     runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_DB: marketplace_test
+          POSTGRES_USER: marketplace
+          POSTGRES_PASSWORD: marketplace
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U marketplace -d marketplace_test"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
     steps:
       - uses: actions/checkout@v4
       - uses: shivammathur/setup-php@v2
@@ -17,5 +34,29 @@ jobs:
           extensions: mbstring, intl, pdo_pgsql
           coverage: none
       - uses: ramsey/composer-install@v3
-      - run: composer validate --strict
-      - run: vendor/bin/phpunit
+      - name: Validate Composer configuration
+        run: composer validate --strict
+      - name: Run database migrations
+        env:
+          APP_KEY: base64:AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=
+          DB_CONNECTION: pgsql
+          DB_HOST: 127.0.0.1
+          DB_PORT: 5432
+          DB_DATABASE: marketplace_test
+          DB_USERNAME: marketplace
+          DB_PASSWORD: marketplace
+        run: php artisan migrate --force
+      - name: Run unit and feature tests
+        env:
+          APP_ENV: testing
+          APP_KEY: base64:AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=
+          DB_CONNECTION: pgsql
+          DB_HOST: 127.0.0.1
+          DB_PORT: 5432
+          DB_DATABASE: marketplace_test
+          DB_USERNAME: marketplace
+          DB_PASSWORD: marketplace
+          CACHE_STORE: array
+          SESSION_DRIVER: array
+          QUEUE_CONNECTION: sync
+        run: vendor/bin/phpunit
