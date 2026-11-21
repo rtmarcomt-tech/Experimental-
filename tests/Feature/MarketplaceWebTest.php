@@ -52,6 +52,40 @@ class MarketplaceWebTest extends TestCase
             ->assertDontSee('Private Legal Name');
     }
 
+    public function test_creator_uploads_to_private_library_and_publishes_only_after_setting_offer(): void
+    {
+        Storage::fake('private');
+        $seller = User::create(['name'=>'Creator Account','email'=>'library-creator@example.test','password'=>'password-long-enough']);
+        $profile = CreatorProfile::create([
+            'user_id'=>$seller->id,'public_name'=>'Library Creator','slug'=>'library-creator','status'=>'approved',
+        ]);
+
+        $this->actingAs($seller)->post('/criador/conteudos', [
+            'type'=>'photo',
+            'title'=>'Library Draft',
+            'description'=>'A work in progress.',
+            'visibility'=>'free',
+            'original'=>UploadedFile::fake()->image('original.jpg'),
+            'preview'=>UploadedFile::fake()->image('preview.jpg'),
+            'rights_basis'=>'owner',
+            'accept_rights'=>'1',
+        ])->assertRedirect(route('dashboard'));
+
+        $media = $profile->media()->where('title','Library Draft')->firstOrFail();
+        $this->assertSame('draft', $media->status);
+        $this->get('/')->assertDontSee('Library Draft');
+
+        $this->post(route('creator.media.offer',$media->id), [
+            'visibility'=>'free',
+        ])->assertRedirect(route('dashboard'));
+
+        $this->post(route('creator.media.publish',$media->id))
+            ->assertRedirect(route('creator.show',$profile->slug));
+
+        $this->assertDatabaseHas('digital_media', ['id'=>$media->id,'status'=>'published','visibility'=>'free']);
+        $this->get('/criador/library-creator')->assertOk()->assertSee('Library Draft');
+    }
+
     public function test_visitor_can_register_and_reach_personal_dashboard(): void
     {
         $this->post('/registar', [
