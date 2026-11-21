@@ -222,6 +222,57 @@ class CreatorPayoutTest extends TestCase
         ]);
     }
 
+    public function test_verified_paypal_return_webhook_restores_a_previously_paid_creator_payout(): void
+    {
+        Cache::flush();
+        config([
+            'paypal.mode' => 'sandbox',
+            'paypal.client_id' => 'sandbox-client',
+            'paypal.client_secret' => 'sandbox-secret',
+            'paypal.webhook_id' => 'PAYOUT-RETURN-WEBHOOK-001',
+        ]);
+        [$creator, $profile] = $this->creatorWithAvailableBalance(12500);
+        $payout = $this->requestedPayout($creator, $profile, 12500);
+        $payout->update([
+            'status' => 'paid',
+            'paypal_batch_id' => 'PAYPAL-BATCH-RETURN',
+            'paypal_sender_item_id' => 'creator-payout-'.$payout->id,
+            'paypal_item_id' => 'PAYPAL-ITEM-RETURN',
+        ]);
+
+        Http::fake([
+            'https://api-m.sandbox.paypal.com/v1/oauth2/token' => Http::response(['access_token' => 'payout-return-token', 'expires_in' => 3600], 200),
+            'https://api-m.sandbox.paypal.com/v1/notifications/verify-webhook-signature' => Http::response(['verification_status' => 'SUCCESS'], 200),
+        ]);
+
+        $event = [
+            'id' => 'PAYOUT-RETURN-WH-001',
+            'event_type' => 'PAYMENT.PAYOUTS-ITEM.RETURNED',
+            'resource' => [
+                'id' => 'PAYPAL-ITEM-RETURN',
+                'payout_item_id' => 'PAYPAL-ITEM-RETURN',
+                'payout_batch_id' => 'PAYPAL-BATCH-RETURN',
+                'sender_item_id' => 'creator-payout-'.$payout->id,
+                'transaction_status' => 'RETURNED',
+                'amount' => ['value' => '125.00', 'currency' => 'EUR'],
+            ],
+        ];
+        $headers = [
+            'PAYPAL-AUTH-ALGO' => 'SHA256withRSA',
+            'PAYPAL-CERT-URL' => 'https://api-m.sandbox.paypal.com/cert/test',
+            'PAYPAL-TRANSMISSION-ID' => 'PAYOUT-RETURN-TRANSMISSION-001',
+            'PAYPAL-TRANSMISSION-SIG' => 'signature',
+            'PAYPAL-TRANSMISSION-TIME' => '2026-11-21T14:00:00Z',
+        ];
+
+        $this->postJson('/api/webhooks/paypal', $event, $headers)->assertOk()->assertJsonPath('status', 'processed');
+
+        $this->assertDatabaseHas('creator_payouts', ['id' => $payout->id, 'status' => 'returned']);
+        $available = CreatorLedgerAccount::where('creator_profile_id', $profile->id)
+            ->where('account_type', 'available')->firstOrFail();
+        $this->assertSame(12500, (int) CreatorLedgerEntry::where('ledger_account_id', $available->id)->sum('amount_minor'));
+    }
+
     private function creatorWithAvailableBalance(int $amount): array
     {
         $user = User::create([
