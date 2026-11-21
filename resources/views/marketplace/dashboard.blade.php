@@ -74,7 +74,7 @@
                     <div class="field"><label>Nome público</label><input name="public_name" required maxlength="120"></div>
                     <div class="field"><label>País (código ISO de 2 letras)</label><input name="country_code" value="PT" maxlength="2" required></div>
                 </div>
-                <div class="field"><label>Biografia</label><textarea name="bio" maxlength="2000"></textarea></div>
+                <div class="field"><label>Biografia</label><textarea name="bio" maxlength="280"></textarea></div>
                 <div class="field"><label>Documento de identificação (PDF, JPG ou PNG)</label><input type="file" name="identity_document" accept=".pdf,.jpg,.jpeg,.png" required></div>
                 <label class="muted"><input type="checkbox" name="accept_creator_terms" value="1" required> Confirmo que os dados submetidos são verdadeiros e aceito os termos de candidatura.</label>
                 <p><button class="btn accent">Enviar candidatura</button></p>
