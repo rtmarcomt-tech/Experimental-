@@ -121,7 +121,10 @@
                                         <button class="btn secondary">Guardar oferta</button>
                                     </form>
                                     <form method="post" action="{{ route('creator.media.publish',$item->id) }}" style="margin-top:7px">@csrf<button class="btn accent">Publicar no perfil</button></form>
-                                @else<span>{{ $item->visibility==='free'?'Gratuito':'Pago' }}</span>@endif
+                                @else
+                                    <span>{{ $item->visibility==='free'?'Gratuito':'Pago' }}</span>
+                                    <form method="post" action="{{ route('creator.media.unpublish',$item->id) }}" style="margin-top:7px">@csrf<button class="btn secondary">Retirar do perfil</button></form>
+                                @endif
                             </td>
                         </tr>
                     @endforeach
