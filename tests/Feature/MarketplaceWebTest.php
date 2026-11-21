@@ -100,6 +100,26 @@ class MarketplaceWebTest extends TestCase
         $this->get('/minha-area')->assertOk()->assertSee('New Member')->assertSee('Candidatura de criador');
     }
 
+
+    public function test_user_and_creator_web_routes_are_separated(): void
+    {
+        $buyer = User::create([
+            'name' => 'Buyer account',
+            'email' => 'route-buyer@example.test',
+            'password' => 'password-long-enough',
+            'account_type' => 'user',
+        ]);
+        $creator = User::create([
+            'name' => 'Creator account',
+            'email' => 'route-creator@example.test',
+            'password' => 'password-long-enough',
+            'account_type' => 'creator',
+        ]);
+
+        $this->actingAs($buyer)->post('/candidatura-criador', [])->assertForbidden();
+        $this->actingAs($creator)->get('/compras')->assertForbidden();
+    }
+
     public function test_creator_application_requires_and_stores_identity_document(): void
     {
         Storage::fake('private');
