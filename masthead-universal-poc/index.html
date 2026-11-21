@@ -1,0 +1,138 @@
+<!doctype html>
+<html lang="pt-PT">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="theme-color" content="#f5f3ef">
+  <title>Universal — Criador de websites</title>
+  <style>
+    :root{font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;color:#25231f;background:#f5f3ef;font-synthesis:none}
+    *{box-sizing:border-box}body{margin:0}button,input,textarea,select{font:inherit}
+    .shell{max-width:1160px;margin:auto;padding:28px 24px 72px}
+    header{display:flex;align-items:center;justify-content:space-between;padding:8px 0 34px}
+    .brand{font-size:19px;font-weight:750;letter-spacing:-.06em}.brand span{font-weight:400;color:#8d877d}
+    .tag{font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:#8a8379}
+    .hero{display:grid;grid-template-columns:1.1fr .9fr;gap:56px;align-items:center;margin:34px 0 52px}
+    h1{font-size:clamp(42px,6vw,70px);line-height:.98;letter-spacing:-.065em;font-weight:600;margin:14px 0 18px;max-width:620px}
+    .intro{font-size:16px;line-height:1.7;color:#716b62;max-width:490px}
+    .visual{min-height:290px;border-radius:22px;background:linear-gradient(135deg,#e8e0d5,#d8d0c5 52%,#c5b6a6);padding:20px;display:flex;align-items:center;justify-content:center}
+    .browser{background:#faf9f6;border-radius:12px;box-shadow:0 24px 70px #51483a25;width:100%;max-width:380px;overflow:hidden}
+    .browserbar{height:28px;border-bottom:1px solid #e9e5df;display:flex;gap:5px;align-items:center;padding:0 11px}
+    .browserbar i{width:6px;height:6px;border-radius:50%;background:#c9c1b7}
+    .mock{padding:30px 28px 34px}.mock small{font-size:8px;letter-spacing:.2em;color:#9c8d7c}.mock h2{font:500 31px/1.05 Georgia,serif;margin:15px 0}.mock p{font-size:10px;line-height:1.7;color:#80796f;max-width:220px}
+    .mockline{height:1px;background:#ded8cf;margin-top:26px}
+    .workspace{display:grid;grid-template-columns:1fr 1fr;gap:22px;align-items:start}
+    .panel{background:#fff;border:1px solid #e9e5df;border-radius:16px;padding:25px}
+    .panel h2{font-size:19px;letter-spacing:-.035em;margin:0 0 6px}.sub{font-size:13px;color:#898278;margin:0 0 23px}
+    label{display:block;font-size:12px;font-weight:650;margin:16px 0 7px}
+    input,textarea,select{width:100%;border:1px solid #e4dfd7;border-radius:9px;padding:12px 13px;background:#fcfbf9;color:#28251f;outline:none}
+    input:focus,textarea:focus,select:focus{border-color:#9b8a76;box-shadow:0 0 0 3px #9b8a761a}
+    textarea{min-height:88px;resize:vertical}
+    .templates{display:grid;grid-template-columns:repeat(3,1fr);gap:9px}
+    .template{border:1px solid #e6e1d9;border-radius:10px;padding:8px;background:#fff;cursor:pointer;text-align:left}
+    .template[aria-pressed=true]{border:2px solid #76634f;padding:7px;background:#f8f5f0}
+    .thumb{height:62px;border-radius:5px;margin-bottom:8px;display:flex;align-items:center;justify-content:center;font:16px Georgia,serif;color:#6e6256}
+    .thumb.editorial{background:#e9e0d5}.thumb.studio{background:#242321;color:#eee7dc}.thumb.portfolio{background:#dfe2dc}
+    .template strong{font-size:11px;display:block}.template small{font-size:10px;color:#8a8379}
+    .actions{display:flex;gap:10px;margin-top:22px}
+    button.primary,button.secondary{border:0;border-radius:9px;padding:12px 17px;cursor:pointer;font-size:13px;font-weight:650}
+    button.primary{background:#282620;color:#fff}button.secondary{background:#f0ede8;color:#4e4941}
+    .preview{background:#f8f6f2;border-radius:12px;min-height:360px;overflow:hidden}
+    .previewtop{padding:13px 16px;border-bottom:1px solid #e8e3dc;display:flex;justify-content:space-between;font-size:11px;color:#8a8379}
+    .previewbody{padding:38px 30px}.previewbody .eyebrow{font-size:9px;letter-spacing:.18em;color:#9a8875}
+    .previewbody h3{font:500 34px/1.05 Georgia,serif;letter-spacing:-.04em;margin:15px 0}
+    .previewbody p{font-size:13px;line-height:1.7;color:#777066;max-width:320px}
+    .previewbody .cta{display:inline-block;margin-top:17px;background:#292721;color:white;padding:10px 15px;border-radius:4px;font-size:10px}
+    .status{font-size:11px;color:#7e766b;margin-top:13px;min-height:16px}
+    .saved{margin-top:18px;border-top:1px solid #eee9e2;padding-top:16px}
+    .saved h3{font-size:12px;margin:0 0 10px}.siteitem{display:flex;align-items:center;justify-content:space-between;padding:10px 0;border-bottom:1px solid #f0ede8;font-size:12px}
+    .siteitem span{color:#8c857b}.siteitem button{border:0;background:none;color:#76634f;cursor:pointer;font-size:11px}
+    footer{margin-top:42px;color:#999187;font-size:11px;text-align:center}
+    @media(max-width:760px){.hero{grid-template-columns:1fr;gap:25px;margin-top:14px}.visual{min-height:220px}.workspace{grid-template-columns:1fr}.shell{padding:20px 16px 48px}.panel{padding:20px}}
+  </style>
+</head>
+<body>
+  <main class="shell">
+    <header><div class="brand">universal<span> / websites</span></div><div class="tag">Website builder · Preview</div></header>
+    <section class="hero">
+      <div><div class="tag">A sua presença digital, à sua maneira</div><h1>Um website.<br>O seu universo.</h1><p class="intro">Crie uma presença digital própria, escolha uma linguagem visual e publique quando estiver pronto. Sem precisar de conhecimentos técnicos.</p></div>
+      <div class="visual" aria-hidden="true"><div class="browser"><div class="browserbar"><i></i><i></i><i></i></div><div class="mock"><small>YOUR SPACE · EST. 2026</small><h2>Uma ideia<br>ganha forma.</h2><p>Um espaço digital pensado para apresentar o seu trabalho, a sua marca e aquilo que o distingue.</p><div class="mockline"></div></div></div></div>
+    </section>
+    <section class="workspace">
+      <div class="panel">
+        <h2>Comece a criar</h2><p class="sub">Defina a base do seu website. Pode alterar tudo mais tarde.</p>
+        <form id="builder">
+          <label for="siteName">Nome do website</label><input id="siteName" name="siteName" maxlength="60" placeholder="Ex.: Atelier Horizonte" required>
+          <label for="siteType">O que pretende criar?</label><select id="siteType" name="siteType"><option>Website pessoal</option><option>Portefólio criativo</option><option>Website profissional</option><option>Website de empresa</option><option>Loja ou projeto comercial</option><option>Publicação / revista</option><option>Outro projeto</option></select>
+          <label>Escolha um ponto de partida</label>
+          <div class="templates" role="group" aria-label="Modelos">
+            <button class="template" type="button" data-template="editorial" aria-pressed="true"><div class="thumb editorial">Aa</div><strong>Editorial</strong><small>Elegante e intemporal</small></button>
+            <button class="template" type="button" data-template="studio" aria-pressed="false"><div class="thumb studio">Aa</div><strong>Studio</strong><small>Contemporâneo e forte</small></button>
+            <button class="template" type="button" data-template="portfolio" aria-pressed="false"><div class="thumb portfolio">Aa</div><strong>Portfolio</strong><small>Visual e minimalista</small></button>
+          </div>
+          <label for="headline">Título principal</label><input id="headline" name="headline" maxlength="100" placeholder="Uma ideia ganha forma.">
+          <label for="description">Breve apresentação</label><textarea id="description" name="description" maxlength="500" placeholder="Conte, em poucas palavras, o que gostaria de apresentar."></textarea>
+          <div class="actions"><button class="primary" type="submit">Guardar projeto</button><button class="secondary" type="button" id="reset">Limpar</button></div>
+          <div class="status" id="status" role="status" aria-live="polite"></div>
+        </form>
+        <div class="saved" id="saved"><h3>Os seus projetos neste dispositivo</h3><div id="siteList"></div></div>
+      </div>
+      <div class="panel">
+        <h2>Pré-visualização</h2><p class="sub">Veja uma primeira versão enquanto configura o seu website.</p>
+        <div class="preview" id="preview"><div class="previewtop"><span id="previewType">WEBSITE PESSOAL</span><span>PRÉ-VISUALIZAÇÃO</span></div><div class="previewbody"><div class="eyebrow">BEM-VINDO AO MEU ESPAÇO</div><h3 id="previewHeadline">Uma ideia ganha forma.</h3><p id="previewDescription">Um espaço digital pensado para apresentar o seu trabalho, a sua marca e aquilo que o distingue.</p><span class="cta">CONHECER</span></div></div>
+      </div>
+    </section>
+    <footer>UNIVERSAL · Protótipo funcional de experiência · Os dados ficam guardados neste navegador.</footer>
+  </main>
+  <script>
+    (() => {
+      const $ = id => document.getElementById(id);
+      let template = "editorial";
+      const fields = ["siteName","siteType","headline","description"];
+      const read = () => Object.fromEntries(fields.map(id => [id,$(id).value.trim()]));
+      const update = () => {
+        $("previewHeadline").textContent = $("headline").value.trim() || "Uma ideia ganha forma.";
+        $("previewDescription").textContent = $("description").value.trim() || "Um espaço digital pensado para apresentar o seu trabalho, a sua marca e aquilo que o distingue.";
+        $("previewType").textContent = $("siteType").value.toUpperCase();
+        $("preview").dataset.template = template;
+        const colors = {editorial:["#f8f6f2","#292721","#9a8875"],studio:["#292721","#f4eee5","#c8a985"],portfolio:["#e9ece6","#242821","#71816f"]};
+        const [bg,fg,accent] = colors[template];
+        $("preview").style.background = bg;
+        $("preview").style.color = fg;
+        $("preview").querySelector(".eyebrow").style.color = accent;
+        $("preview").querySelector(".cta").style.background = fg;
+        $("preview").querySelector(".cta").style.color = bg;
+      };
+      document.querySelectorAll("[data-template]").forEach(button => button.addEventListener("click", () => {
+        template = button.dataset.template;
+        document.querySelectorAll("[data-template]").forEach(b => b.setAttribute("aria-pressed",String(b===button)));
+        update();
+      }));
+      fields.slice(1).forEach(id => $(id).addEventListener("input",update));
+      const load = () => { try { return JSON.parse(localStorage.getItem("universal-sites") || "[]"); } catch { return []; } };
+      const renderList = () => {
+        const sites = load(); $("siteList").replaceChildren();
+        if (!sites.length) { const p=document.createElement("p");p.className="sub";p.textContent="Ainda não guardou nenhum projeto."; $("siteList").append(p); return; }
+        sites.forEach(site => {
+          const row=document.createElement("div");row.className="siteitem";
+          const name=document.createElement("strong");name.textContent=site.siteName;
+          const meta=document.createElement("span");meta.textContent=site.siteType;
+          const edit=document.createElement("button");edit.type="button";edit.textContent="Editar";
+          edit.addEventListener("click",()=>{fields.forEach(id=>$(id).value=site[id]||"");template=site.template||"editorial";document.querySelectorAll("[data-template]").forEach(b=>b.setAttribute("aria-pressed",String(b.dataset.template===template)));update();window.scrollTo({top:0,behavior:"smooth"});});
+          row.append(name,meta,edit);$("siteList").append(row);
+        });
+      };
+      $("builder").addEventListener("submit",event=>{
+        event.preventDefault();const data=read();if(!data.siteName){$("status").textContent="Indique um nome para o website.";return;}
+        const sites=load();const entry={...data,template,updatedAt:new Date().toISOString()};
+        const index=sites.findIndex(s=>s.siteName.toLowerCase()===data.siteName.toLowerCase());
+        if(index>=0)sites[index]=entry;else sites.unshift(entry);
+        try{localStorage.setItem("universal-sites",JSON.stringify(sites));$("status").textContent="Projeto guardado neste dispositivo.";renderList();}
+        catch{$("status").textContent="Não foi possível guardar os dados neste navegador.";}
+      });
+      $("reset").addEventListener("click",()=>{$("builder").reset();template="editorial";document.querySelectorAll("[data-template]").forEach(b=>b.setAttribute("aria-pressed",String(b.dataset.template==="editorial")));$("status").textContent="";update();});
+      update();renderList();
+    })();
+  </script>
+</body>
+</html>
