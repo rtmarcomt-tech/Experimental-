@@ -80,13 +80,14 @@ class CreatorPayoutTest extends TestCase
         [$user, $profile] = $this->creatorWithAvailableBalance(12500);
         $payout = $this->requestedPayout($user, $profile, 12500);
         $payout->update([
-            'status' => 'paid',
+            'status' => 'processing',
             'paypal_batch_id' => 'BATCH-RETURNED',
             'paypal_item_id' => 'ITEM-RETURNED',
         ]);
 
         $finalizer = app(CreatorPayoutFinalizer::class);
-        $finalizer->returnFunds($payout, 'BATCH-RETURNED', 'ITEM-RETURNED', 'PayPal returned the payout');
+        $finalizer->complete($payout, 'BATCH-RETURNED', 'ITEM-RETURNED');
+        $finalizer->returnFunds($payout->fresh(), 'BATCH-RETURNED', 'ITEM-RETURNED', 'PayPal returned the payout');
         $finalizer->returnFunds($payout->fresh(), 'BATCH-RETURNED', 'ITEM-RETURNED', 'Duplicate return webhook');
 
         $available = CreatorLedgerAccount::where('creator_profile_id', $profile->id)
