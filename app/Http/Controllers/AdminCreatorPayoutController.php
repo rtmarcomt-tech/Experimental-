@@ -90,7 +90,13 @@ class AdminCreatorPayoutController extends Controller
                 return back()->with('success', 'PayPal confirmou o pagamento ao criador.');
             }
 
-            if (in_array($status, ['FAILED', 'RETURNED', 'BLOCKED', 'DENIED'], true)) {
+            if (in_array($status, ['RETURNED', 'REFUNDED'], true)) {
+                $reason = (string) (data_get($itemData, 'errors.name') ?? data_get($itemData, 'errors.message') ?? 'O PayPal devolveu o pagamento à plataforma.');
+                $finalizer->returnFunds($payout, $payout->paypal_batch_id, data_get($itemData, 'payout_item_id'), $reason);
+                return back()->withErrors(['payout' => 'O PayPal devolveu o pagamento. O saldo foi reposto na conta do criador.']);
+            }
+
+            if (in_array($status, ['FAILED', 'BLOCKED', 'DENIED', 'CANCELED', 'REVERSED'], true)) {
                 $reason = (string) (data_get($itemData, 'errors.name') ?? data_get($itemData, 'errors.message') ?? 'O PayPal não concluiu o pagamento.');
                 $finalizer->fail($payout, $payout->paypal_batch_id, data_get($itemData, 'payout_item_id'), $reason);
                 return back()->withErrors(['payout' => 'O pagamento falhou. O saldo foi reposto na conta do criador.']);
