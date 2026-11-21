@@ -96,8 +96,8 @@ class CreatorPayoutFinalizer
         return DB::transaction(function () use ($payout, $status, $batchId, $itemId, $reason): CreatorPayout {
             $locked = CreatorPayout::whereKey($payout->id)->lockForUpdate()->firstOrFail();
 
-            if (in_array($locked->status, ['paid', 'failed'], true)) {
-                if ($locked->status !== $status) {
+            if (in_array($locked->status, ['paid', 'failed', 'returned'], true)) {
+                if ($locked->status !== $status && $locked->status !== 'returned') {
                     throw new RuntimeException('A settled creator payout cannot change its final status.');
                 }
                 return $locked;
