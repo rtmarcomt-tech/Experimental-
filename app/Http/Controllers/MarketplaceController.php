@@ -27,7 +27,7 @@ class MarketplaceController extends Controller
 {
     public function home()
     {
-        $items = DigitalMedia::query()->where('status', 'published')
+        $items = DigitalMedia::query()->where('status', 'published')->whereHas('creatorProfile', fn ($query) => $query->where('status', 'approved')->whereHas('user', fn ($user) => $user->where('account_status', 'active')))
             ->with(['creatorProfile:id,public_name,slug', 'assets' => fn ($q) => $q->where('purpose', 'preview')->latest('id')])
             ->latest('published_at')->paginate(24);
         return view('marketplace.home', compact('items'));
