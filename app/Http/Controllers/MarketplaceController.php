@@ -14,6 +14,7 @@ use App\Models\Order;
 use App\Models\OrderItem;
 use App\Models\CreatorLedgerAccount;
 use App\Models\FundHold;
+use App\Models\CreatorPayout;
 use App\Domain\Finance\CommissionCalculator;
 use App\Services\Payments\PayPalClient;
 use App\Services\Payments\CaptureFinalizer;
@@ -69,6 +70,7 @@ class MarketplaceController extends Controller
             'presentation' => ['nullable', 'string', 'max:180'],
             'bio' => ['nullable', 'string', 'max:280'],
             'profile_photo' => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp', 'max:5120'],
+            'payout_email' => ['nullable', 'email', 'max:255'],
         ]);
 
         if ($request->hasFile('profile_photo')) {
@@ -136,6 +138,7 @@ class MarketplaceController extends Controller
     {
         $user = $request->user();
         if ($user->is_admin) {
+            $adminPayouts = CreatorPayout::query()->with('creatorProfile:id,public_name')->whereIn('status', ['requested','processing','submission_unknown'])->latest('requested_at')->limit(30)->get();
             $pendingCases = \App\Models\CreatorVerificationCase::with(['creatorProfile.user','documents'])
                 ->where('status','submitted')->oldest('submitted_at')->get();
             $captured = Order::query()->where('status', 'captured');
@@ -152,10 +155,11 @@ class MarketplaceController extends Controller
             ];
             $recentOrders = Order::query()->with(['buyer:id,name,email', 'item:id,order_id,title_snapshot,creator_profile_id', 'item.creatorProfile:id,public_name'])
                 ->latest()->limit(12)->get();
-            return view('marketplace.admin', compact('pendingCases','stats','recentOrders'));
+            return view('marketplace.admin', compact('pendingCases','stats','recentOrders','adminPayouts'));
         }
         $profile = $user->creatorProfile;
         $media = $profile ? $profile->media()->with('assets')->latest()->get() : collect();
+        $creatorPayouts = $profile ? CreatorPayout::where('creator_profile_id', $profile->id)->latest('requested_at')->limit(10)->get() : collect();
         $library = MediaAccessGrant::where('buyer_id',$user->id)->whereNull('revoked_at')
             ->with('digitalMedia.creatorProfile')->latest('granted_at')->get();
         $creatorSales = collect();
@@ -203,7 +207,7 @@ class MarketplaceController extends Controller
                 'net_minor' => (int) $totals->net_minor,
             ];
         }
-        return view('marketplace.dashboard', compact('profile','media','library','creatorStats','creatorFinance','creatorSales'));
+        return view('marketplace.dashboard', compact('profile','media','library','creatorStats','creatorFinance','creatorSales','creatorPayouts'));
     }
 
     public function purchaseHistory(Request $request)
