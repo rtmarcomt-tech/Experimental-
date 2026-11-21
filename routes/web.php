@@ -28,6 +28,7 @@ Route::middleware('auth')->group(function (): void {
     Route::post('/criador/conteudos', [MarketplaceController::class, 'uploadMedia'])->name('creator.media.store');
     Route::post('/criador/conteudos/{media}/oferta', [MarketplaceController::class, 'updateMediaOffer'])->name('creator.media.offer');
     Route::post('/criador/conteudos/{media}/publicar', [MarketplaceController::class, 'publishMedia'])->name('creator.media.publish');
+    Route::post('/criador/conteudos/{media}/retirar', [MarketplaceController::class, 'unpublishMedia'])->name('creator.media.unpublish');
     Route::post('/media/{slug}/claim', [MarketplaceController::class, 'claimFree'])->name('media.claim');
     Route::post('/media/{slug}/checkout', [MarketplaceController::class, 'checkout'])->name('media.checkout');
     Route::get('/checkout/paypal/return', [MarketplaceController::class, 'paypalReturn'])->name('paypal.return');
