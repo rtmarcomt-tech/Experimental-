@@ -20,20 +20,25 @@ Route::middleware('guest')->group(function (): void {
 Route::middleware('auth')->group(function (): void {
     Route::post('/sair', [MarketplaceController::class, 'logout'])->name('logout');
     Route::get('/minha-area', [MarketplaceController::class, 'dashboard'])->name('dashboard');
-    Route::get('/compras', [MarketplaceController::class, 'purchaseHistory'])->name('purchases.index');
-    Route::get('/compras/{reference}', [MarketplaceController::class, 'purchaseDetail'])->name('purchases.show');
-    Route::post('/candidatura-criador', [MarketplaceController::class, 'applyCreator'])->name('creator.apply');
-    Route::post('/criador/perfil', [MarketplaceController::class, 'updateCreatorProfile'])->name('creator.profile.update');
-    Route::post('/criador/pagamentos', [CreatorPayoutController::class, 'store'])->name('creator.payouts.store')->middleware('throttle:3,60');
-    Route::post('/criador/conteudos', [MarketplaceController::class, 'uploadMedia'])->name('creator.media.store');
-    Route::post('/criador/conteudos/{media}/oferta', [MarketplaceController::class, 'updateMediaOffer'])->name('creator.media.offer');
-    Route::post('/criador/conteudos/{media}/publicar', [MarketplaceController::class, 'publishMedia'])->name('creator.media.publish');
-    Route::post('/criador/conteudos/{media}/retirar', [MarketplaceController::class, 'unpublishMedia'])->name('creator.media.unpublish');
-    Route::post('/media/{slug}/claim', [MarketplaceController::class, 'claimFree'])->name('media.claim');
-    Route::post('/media/{slug}/checkout', [MarketplaceController::class, 'checkout'])->name('media.checkout');
-    Route::get('/checkout/paypal/return', [MarketplaceController::class, 'paypalReturn'])->name('paypal.return');
-    Route::get('/checkout/paypal/cancel', [MarketplaceController::class, 'paypalCancel'])->name('paypal.cancel');
-    Route::get('/biblioteca/{media}/download', [MarketplaceController::class, 'downloadLibrary'])->name('library.download');
+    Route::middleware('account:user')->group(function (): void {
+        Route::get('/compras', [MarketplaceController::class, 'purchaseHistory'])->name('purchases.index');
+        Route::get('/compras/{reference}', [MarketplaceController::class, 'purchaseDetail'])->name('purchases.show');
+        Route::post('/media/{slug}/claim', [MarketplaceController::class, 'claimFree'])->name('media.claim');
+        Route::post('/media/{slug}/checkout', [MarketplaceController::class, 'checkout'])->name('media.checkout');
+        Route::get('/checkout/paypal/return', [MarketplaceController::class, 'paypalReturn'])->name('paypal.return');
+        Route::get('/checkout/paypal/cancel', [MarketplaceController::class, 'paypalCancel'])->name('paypal.cancel');
+        Route::get('/biblioteca/{media}/download', [MarketplaceController::class, 'downloadLibrary'])->name('library.download');
+    });
+
+    Route::middleware('account:creator')->group(function (): void {
+        Route::post('/candidatura-criador', [MarketplaceController::class, 'applyCreator'])->name('creator.apply');
+        Route::post('/criador/perfil', [MarketplaceController::class, 'updateCreatorProfile'])->name('creator.profile.update');
+        Route::post('/criador/pagamentos', [CreatorPayoutController::class, 'store'])->name('creator.payouts.store')->middleware('throttle:3,60');
+        Route::post('/criador/conteudos', [MarketplaceController::class, 'uploadMedia'])->name('creator.media.store');
+        Route::post('/criador/conteudos/{media}/oferta', [MarketplaceController::class, 'updateMediaOffer'])->name('creator.media.offer');
+        Route::post('/criador/conteudos/{media}/publicar', [MarketplaceController::class, 'publishMedia'])->name('creator.media.publish');
+        Route::post('/criador/conteudos/{media}/retirar', [MarketplaceController::class, 'unpublishMedia'])->name('creator.media.unpublish');
+    });
 });
 
 Route::prefix('admin')->middleware(['auth','admin'])->group(function (): void {
