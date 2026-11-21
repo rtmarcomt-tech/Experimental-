@@ -1,20 +1,22 @@
 <?php
 
-namespace App\\Http\\Controllers;
+namespace App\Http\Controllers;
 
-use App\\Models\\CreatorProfile;
-use App\\Models\\CreatorVerificationDocument;\nuse App\\Models\\CreatorVerificationCase;\nuse App\\Models\\MediaDownloadEvent;\nuse App\\Models\\MediaAccessGrant;
-use App\\Models\\DigitalMedia;
-use App\\Models\\MediaAccessGrant;
-use App\\Models\\MediaRightsDeclaration;
-use App\\Models\\User;
-use Illuminate\\Http\\Request;
-use Illuminate\\Support\\Facades\\Auth;
-use Illuminate\\Support\\Facades\\DB;
-use Illuminate\\Support\\Facades\\Hash;
-use Illuminate\\Support\\Facades\\Storage;\nuse Illuminate\\Support\\Str;
-use Illuminate\\Support\\Str;
-use Illuminate\\Validation\\ValidationException;
+use App\Models\CreatorProfile;
+use App\Models\CreatorVerificationDocument;
+use App\Models\CreatorVerificationCase;
+use App\Models\MediaDownloadEvent;
+use App\Models\MediaAccessGrant;
+use App\Models\DigitalMedia;
+use App\Models\MediaRightsDeclaration;
+use App\Models\User;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
+use Illuminate\Validation\ValidationException;
 
 class MarketplaceController extends Controller
 {
@@ -77,7 +79,7 @@ class MarketplaceController extends Controller
     {
         $user = $request->user();
         if ($user->is_admin) {
-            $pendingCases = \\App\\Models\\CreatorVerificationCase::with(['creatorProfile.user','documents'])
+            $pendingCases = \App\Models\CreatorVerificationCase::with(['creatorProfile.user','documents'])
                 ->where('status','submitted')->oldest('submitted_at')->get();
             $stats = [
                 'creators' => CreatorProfile::count(),
@@ -129,7 +131,7 @@ class MarketplaceController extends Controller
                     'size_bytes'=>$file->getSize(),'sha256'=>hash_file('sha256',$file->getRealPath()),'status'=>'submitted',
                 ]);
             });
-        } catch (\\Throwable $e) {
+        } catch (\Throwable $e) {
             Storage::disk('private')->delete($path);
             throw $e;
         }
@@ -174,7 +176,7 @@ class MarketplaceController extends Controller
                     'rights_basis'=>$data['rights_basis'],'terms_version'=>'v1','accepted_at'=>now(),
                 ]);
             });
-        } catch (\\Throwable $e) {
+        } catch (\Throwable $e) {
             Storage::disk('private')->delete([$originalPath,$previewPath]);
             throw $e;
         }
