@@ -93,6 +93,7 @@ class MarketplaceWebTest extends TestCase
             'email'=>'new-member@example.test',
             'password'=>'a-strong-password',
             'password_confirmation'=>'a-strong-password',
+            'account_type'=>'creator',
         ])->assertRedirect(route('dashboard'));
 
         $this->assertAuthenticated();
@@ -102,7 +103,7 @@ class MarketplaceWebTest extends TestCase
     public function test_creator_application_requires_and_stores_identity_document(): void
     {
         Storage::fake('private');
-        $user = User::create(['name'=>'Applicant','email'=>'applicant@example.test','password'=>'password-long-enough']);
+        $user = User::create(['name'=>'Applicant','email'=>'applicant@example.test','password'=>'password-long-enough','account_type'=>'creator']);
         $this->actingAs($user)->post('/candidatura-criador', [
             'public_name'=>'Applicant Studio',
             'bio'=>'Independent creator.',
