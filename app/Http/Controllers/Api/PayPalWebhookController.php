@@ -93,7 +93,7 @@ class PayPalWebhookController extends Controller
                 }
 
                 $captureFinalizer->finalize($paypalOrderId, $captureId, $paypal->parseMinor($amount), $currency);
-            } elseif (in_array($eventType, ['PAYMENT.PAYOUTS-ITEM.SUCCEEDED', 'PAYMENT.PAYOUTS-ITEM.FAILED'], true)) {
+            } elseif (in_array($eventType, ['PAYMENT.PAYOUTS-ITEM.SUCCEEDED', 'PAYMENT.PAYOUTS-ITEM.FAILED', 'PAYMENT.PAYOUTS-ITEM.BLOCKED', 'PAYMENT.PAYOUTS-ITEM.CANCELED', 'PAYMENT.PAYOUTS-ITEM.RETURNED', 'PAYMENT.PAYOUTS-ITEM.REFUNDED'], true)) {
                 $resource = data_get($event, 'resource', []);
                 $senderItemId = data_get($resource, 'sender_item_id');
                 $batchId = data_get($resource, 'payout_batch_id');
@@ -115,11 +115,15 @@ class PayPalWebhookController extends Controller
                     throw new \RuntimeException('PayPal payout webhook amount does not match the stored payout.');
                 }
                 $resolvedBatchId = is_string($batchId) && $batchId !== '' ? $batchId : (string) $payout->paypal_batch_id;
+                $resolvedItemId = is_string($itemId) ? $itemId : null;
                 if ($eventType === 'PAYMENT.PAYOUTS-ITEM.SUCCEEDED') {
-                    $payoutFinalizer->complete($payout, $resolvedBatchId, is_string($itemId) ? $itemId : null);
-                } else {
-                    $reason = (string) (data_get($resource, 'errors.message') ?? data_get($resource, 'transaction_status') ?? 'PayPal payout failed.');
-                    $payoutFinalizer->fail($payout, $resolvedBatchId, is_string($itemId) ? $itemId : null, $reason);
+                    $payoutFinalizer->complete($payout, $resolvedBatchId, $resolvedItemId);
+                } elseif (in_array($eventType, ['PAYMENT.PAYOUTS-ITEM.RETURNED', 'PAYMENT.PAYOUTS-ITEM.REFUNDED'], true)) {
+                    $reason = (string) (data_get($resource, 'errors.message') ?? data_get($resource, 'transaction_status') ?? 'O PayPal devolveu o pagamento ao saldo da plataforma.');
+                    $payoutFinalizer->returnFunds($payout, $resolvedBatchId, $resolvedItemId, $reason);
+                } elseif (in_array($eventType, ['PAYMENT.PAYOUTS-ITEM.FAILED', 'PAYMENT.PAYOUTS-ITEM.BLOCKED', 'PAYMENT.PAYOUTS-ITEM.CANCELED'], true)) {
+                    $reason = (string) (data_get($resource, 'errors.message') ?? data_get($resource, 'transaction_status') ?? 'O PayPal não concluiu o pagamento.');
+                    $payoutFinalizer->fail($payout, $resolvedBatchId, $resolvedItemId, $reason);
                 }
             } elseif ($eventType === 'PAYMENT.CAPTURE.REFUNDED') {
                 $resource = data_get($event, 'resource', []);
