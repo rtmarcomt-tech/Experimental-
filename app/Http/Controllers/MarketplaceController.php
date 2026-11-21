@@ -188,6 +188,7 @@ class MarketplaceController extends Controller
                 ->where('creator_ledger_accounts.creator_profile_id', $profile->id)
                 ->where('fund_holds.status', 'pending')
                 ->sum('fund_holds.amount_minor');
+            $creatorFinance['pending_minor'] = max(0, $creatorFinance['pending_minor'] - $creatorFinance['held_minor']);
             $creatorSales = OrderItem::query()
                 ->where('creator_profile_id', $profile->id)
                 ->whereHas('order', fn ($query) => $query->where('status', 'captured'))
