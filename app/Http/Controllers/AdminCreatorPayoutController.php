@@ -77,6 +77,13 @@ class AdminCreatorPayoutController extends Controller
             });
             $itemData = data_get($item, 'payout_item', []);
             $status = strtoupper((string) data_get($itemData, 'transaction_status'));
+            $amountValue = data_get($itemData, 'amount.value');
+            $amountCurrency = data_get($itemData, 'amount.currency');
+            if (! is_string($amountValue) || ! is_string($amountCurrency)
+                || $paypal->parseMinor($amountValue) !== $payout->amount_minor
+                || strtoupper($amountCurrency) !== $payout->currency) {
+                throw new \RuntimeException('PayPal payout batch amount does not match the stored payout.');
+            }
 
             if ($status === 'SUCCESS') {
                 $finalizer->complete($payout, $payout->paypal_batch_id, data_get($itemData, 'payout_item_id'));
