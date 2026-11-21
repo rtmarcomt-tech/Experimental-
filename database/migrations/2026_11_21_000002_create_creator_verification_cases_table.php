@@ -1,0 +1,3 @@
+<?php
+use Illuminate\Database\Migrations\Migration; use Illuminate\Database\Schema\Blueprint; use Illuminate\Support\Facades\Schema;
+return new class extends Migration { public function up(): void { Schema::create('creator_verification_cases', function(Blueprint $t): void { $t->id(); $t->foreignId('creator_profile_id')->constrained()->cascadeOnDelete(); $t->string('status',24)->default('submitted')->index(); $t->json('submitted_data'); $t->text('decision_reason')->nullable(); $t->foreignId('reviewed_by')->nullable()->constrained('users')->nullOnDelete(); $t->timestamp('submitted_at'); $t->timestamp('reviewed_at')->nullable(); $t->timestamps(); }); } public function down(): void { Schema::dropIfExists('creator_verification_cases'); } };

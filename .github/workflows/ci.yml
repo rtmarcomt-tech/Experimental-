@@ -1,0 +1,21 @@
+name: Marketplace CI
+on:
+  push:
+    branches: [main, "marketplace-digital/**"]
+  pull_request:
+    branches: [main]
+permissions:
+  contents: read
+jobs:
+  php:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: "8.4"
+          extensions: mbstring, intl, pdo_pgsql
+          coverage: none
+      - uses: ramsey/composer-install@v3
+      - run: composer validate --strict
+      - run: vendor/bin/phpunit

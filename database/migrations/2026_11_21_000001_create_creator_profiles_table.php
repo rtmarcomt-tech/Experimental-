@@ -1,0 +1,3 @@
+<?php
+use Illuminate\Database\Migrations\Migration; use Illuminate\Database\Schema\Blueprint; use Illuminate\Support\Facades\Schema;
+return new class extends Migration { public function up(): void { Schema::create('creator_profiles', function(Blueprint $t): void { $t->id(); $t->foreignId('user_id')->unique()->constrained()->cascadeOnDelete(); $t->string('public_name',120); $t->string('slug',140)->unique(); $t->text('bio')->nullable(); $t->char('country_code',2)->nullable(); $t->string('status',24)->default('draft')->index(); $t->timestamp('approved_at')->nullable(); $t->foreignId('reviewed_by')->nullable()->constrained('users')->nullOnDelete(); $t->timestamps(); }); } public function down(): void { Schema::dropIfExists('creator_profiles'); } };
