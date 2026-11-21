@@ -36,6 +36,10 @@ class CreatorPayoutFinalizer
                 throw new RuntimeException('Only submitted or uncertain payouts can be settled.');
             }
 
+            if ($batchId === '' || ($locked->paypal_batch_id && $locked->paypal_batch_id !== $batchId)) {
+                throw new RuntimeException('The PayPal payout batch does not match the stored payout request.');
+            }
+
             $reserved = CreatorLedgerAccount::where([
                 'creator_profile_id' => $locked->creator_profile_id,
                 'currency' => $locked->currency,
