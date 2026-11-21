@@ -72,8 +72,8 @@
                             <td>{{ $payout->requested_at?->format('d/m/Y H:i') }}</td>
                             <td>{{ match($payout->status) {'requested'=>'Por enviar','processing'=>'Em processamento','submission_unknown'=>'Envio por confirmar',default=>$payout->status} }}</td>
                             <td>
-                                @if(in_array($payout->status,['requested','submission_unknown'],true))
-                                    <form method="post" action="{{ route('admin.payouts.submit',$payout->id) }}">@csrf<button class="btn accent">Enviar ao PayPal</button></form>
+                                @if(in_array($payout->status,['requested','submission_unknown'],true) || ($payout->status==='processing' && ! $payout->paypal_batch_id))
+                                    <form method="post" action="{{ route('admin.payouts.submit',$payout->id) }}">@csrf<button class="btn accent">Enviar / repetir com segurança</button></form>
                                 @elseif($payout->status==='processing')
                                     <form method="post" action="{{ route('admin.payouts.reconcile',$payout->id) }}">@csrf<button class="btn secondary">Consultar estado</button></form>
                                 @endif
