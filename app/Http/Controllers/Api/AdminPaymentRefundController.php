@@ -39,12 +39,13 @@ class AdminPaymentRefundController extends Controller
 
         $refund = DB::transaction(function () use ($payment, $data, $key): PaymentRefund {
             $lockedPayment = $payment->newQuery()->whereKey($payment->id)->lockForUpdate()->firstOrFail();
-            $amount = $data['amount_minor'] ?? $lockedPayment->gross_minor;
-            $reserved = PaymentRefund::where('payment_transaction_id', $lockedPayment->id)
+            $reserved = (int) PaymentRefund::where('payment_transaction_id', $lockedPayment->id)
                 ->whereIn('status', ['requested', 'pending', 'completed'])
                 ->sum('gross_minor');
+            $remaining = $lockedPayment->gross_minor - $reserved;
+            $amount = $data['amount_minor'] ?? $remaining;
 
-            if ($amount > $lockedPayment->gross_minor - $reserved) {
+            if ($amount < 1 || $amount > $remaining) {
                 throw ValidationException::withMessages([
                     'amount_minor' => ['The requested refund exceeds the remaining refundable balance.'],
                 ]);
@@ -76,17 +77,27 @@ class AdminPaymentRefundController extends Controller
                 throw new \\RuntimeException('PayPal did not return a refund identifier.');
             }
 
-            $refund->update(['provider_refund_id' => $providerId, 'status' => $providerStatus === 'COMPLETED' ? 'requested' : 'pending']);
+            $refund->update([
+                'provider_refund_id' => $providerId,
+                'status' => $providerStatus === 'COMPLETED' ? 'requested' : ($providerStatus === 'PENDING' ? 'pending' : 'failed'),
+            ]);
 
             if ($providerStatus === 'COMPLETED') {
-                $refund = $finalizer->finalize($refund, $providerId, $paypal->parseMinor((string) data_get($response, 'amount.value', $paypal->formatMinor($refund->gross_minor))), (string) data_get($response, 'amount.currency_code', $refund->currency));
+                $refund = $finalizer->finalize(
+                    $refund,
+                    $providerId,
+                    $paypal->parseMinor((string) data_get($response, 'amount.value', $paypal->formatMinor($refund->gross_minor))),
+                    (string) data_get($response, 'amount.currency_code', $refund->currency)
+                );
             } elseif ($providerStatus !== 'PENDING') {
-                $refund->update(['status' => 'failed']);
+                throw new \\RuntimeException('PayPal did not complete the refund.');
             }
 
             return response()->json($this->refundPayload($refund->fresh()), 202);
         } catch (Throwable $exception) {
-            $refund->update(['status' => 'failed']);
+            if (! $refund->provider_refund_id) {
+                $refund->update(['status' => 'failed']);
+            }
             report($exception);
             return response()->json(['message' => 'PayPal refund could not be confirmed. Check the provider transaction before retrying.'], 502);
         }
