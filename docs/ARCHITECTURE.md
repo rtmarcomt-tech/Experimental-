@@ -120,12 +120,12 @@ Calculate reconciled available balance -> enforce minimum and account checks -> 
 - One-item orders and order-item snapshots.
 - PayPal OAuth, Orders v2 create/capture and webhook signature verification.
 - Capture validation, idempotent entitlement creation, creator pending-ledger credit and configurable hold creation.
+- Hourly matured-hold release command with idempotent pending-debit and available-credit ledger entries.
 - Free-content claims, buyer library and entitlement-controlled original downloads.
 - Download audit events with minimized identifiers.
 - Commission calculator in integer minor units with half-up rounding and invariant tests.
 
 ## Not implemented yet
-- Automated hold release and pending-to-available ledger transfer.
 - Refund and dispute workflows, reserve/debt handling and compensating ledger entries.
 - Creator payout requests, PayPal Payouts account eligibility checks and reconciliation.
 - Full administrator and creator web interfaces.
