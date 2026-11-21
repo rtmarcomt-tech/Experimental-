@@ -5,6 +5,8 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Models\PaymentRefund;
 use App\Models\PaymentTransaction;
+use App\Models\CreatorPayout;
+use App\Services\Payments\CreatorPayoutFinalizer;
 use App\Models\PaypalWebhookEvent;
 use App\Services\Payments\CaptureFinalizer;
 use App\Services\Payments\PayPalClient;
@@ -20,7 +22,8 @@ class PayPalWebhookController extends Controller
         Request $request,
         PayPalClient $paypal,
         CaptureFinalizer $captureFinalizer,
-        RefundFinalizer $refundFinalizer
+        RefundFinalizer $refundFinalizer,
+        CreatorPayoutFinalizer $payoutFinalizer
     ): JsonResponse {
         $event = $request->all();
         $eventId = data_get($event, 'id');
@@ -90,6 +93,27 @@ class PayPalWebhookController extends Controller
                 }
 
                 $captureFinalizer->finalize($paypalOrderId, $captureId, $paypal->parseMinor($amount), $currency);
+            } elseif (in_array($eventType, ['PAYMENT.PAYOUTS-ITEM.SUCCEEDED', 'PAYMENT.PAYOUTS-ITEM.FAILED'], true)) {
+                $resource = data_get($event, 'resource', []);
+                $senderItemId = data_get($resource, 'sender_item_id');
+                $batchId = data_get($resource, 'payout_batch_id');
+                $itemId = data_get($resource, 'payout_item_id');
+                $payoutQuery = CreatorPayout::query();
+                if (is_string($senderItemId) && $senderItemId !== '') {
+                    $payoutQuery->where('paypal_sender_item_id', $senderItemId);
+                } elseif (is_string($batchId) && $batchId !== '') {
+                    $payoutQuery->where('paypal_batch_id', $batchId);
+                } else {
+                    throw new \RuntimeException('PayPal payout webhook is missing its payout identifiers.');
+                }
+                $payout = $payoutQuery->firstOrFail();
+                $resolvedBatchId = is_string($batchId) && $batchId !== '' ? $batchId : (string) $payout->paypal_batch_id;
+                if ($eventType === 'PAYMENT.PAYOUTS-ITEM.SUCCEEDED') {
+                    $payoutFinalizer->complete($payout, $resolvedBatchId, is_string($itemId) ? $itemId : null);
+                } else {
+                    $reason = (string) (data_get($resource, 'errors.message') ?? data_get($resource, 'transaction_status') ?? 'PayPal payout failed.');
+                    $payoutFinalizer->fail($payout, $resolvedBatchId, is_string($itemId) ? $itemId : null, $reason);
+                }
             } elseif ($eventType === 'PAYMENT.CAPTURE.REFUNDED') {
                 $resource = data_get($event, 'resource', []);
                 $providerRefundId = data_get($resource, 'id');
