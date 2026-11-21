@@ -222,6 +222,61 @@ class CheckoutFlowTest extends TestCase
         ])->assertForbidden();
     }
 
+    public function test_paypal_full_refund_uses_capture_endpoint_and_idempotency_header(): void
+    {
+        Http::fake([
+            'https://api-m.sandbox.paypal.com/v1/oauth2/token' => Http::response([
+                'access_token' => 'sandbox-access-token',
+                'expires_in' => 3600,
+            ], 200),
+            'https://api-m.sandbox.paypal.com/v2/payments/captures/CAPTURE-REFUND-001/refund' => Http::response([
+                'id' => 'REFUND-001',
+                'status' => 'COMPLETED',
+            ], 201),
+        ]);
+
+        $result = app(\App\Services\Payments\PayPalClient::class)->refundCapture(
+            'CAPTURE-REFUND-001',
+            null,
+            'EUR',
+            'refund-full-idempotency-001',
+            'Approved refund'
+        );
+
+        self::assertSame('REFUND-001', $result['id']);
+        Http::assertSent(fn ($request) => str_contains($request->url(), '/v2/payments/captures/CAPTURE-REFUND-001/refund')
+            && $request->method() === 'POST'
+            && $request->hasHeader('PayPal-Request-Id', 'refund-full-idempotency-001')
+            && $request['note_to_payer'] === 'Approved refund'
+            && ! isset($request['amount']));
+    }
+
+    public function test_paypal_partial_refund_sends_minor_unit_amount_and_currency(): void
+    {
+        Http::fake([
+            'https://api-m.sandbox.paypal.com/v1/oauth2/token' => Http::response([
+                'access_token' => 'sandbox-access-token',
+                'expires_in' => 3600,
+            ], 200),
+            'https://api-m.sandbox.paypal.com/v2/payments/captures/CAPTURE-REFUND-002/refund' => Http::response([
+                'id' => 'REFUND-002',
+                'status' => 'COMPLETED',
+            ], 201),
+        ]);
+
+        app(\App\Services\Payments\PayPalClient::class)->refundCapture(
+            'CAPTURE-REFUND-002',
+            375,
+            'eur',
+            'refund-partial-idempotency-002'
+        );
+
+        Http::assertSent(fn ($request) => str_contains($request->url(), '/v2/payments/captures/CAPTURE-REFUND-002/refund')
+            && $request['amount']['currency_code'] === 'EUR'
+            && $request['amount']['value'] === '3.75'
+            && $request->hasHeader('PayPal-Request-Id', 'refund-partial-idempotency-002'));
+    }
+
     private function createPaidMedia(): DigitalMedia
     {
         $seller = User::create(['name' => 'Seller', 'email' => 'seller-'.uniqid().'@example.test', 'password' => 'password-long-enough']);
