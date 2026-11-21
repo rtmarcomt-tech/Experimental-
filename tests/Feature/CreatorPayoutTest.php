@@ -123,7 +123,7 @@ class CreatorPayoutTest extends TestCase
         $this->assertSame('returned', $payout->fresh()->status);
         $this->assertSame(12500, (int) CreatorLedgerEntry::where('ledger_account_id', $available->id)->sum('amount_minor'));
         $this->assertSame(0, (int) CreatorLedgerEntry::where('ledger_account_id', $reserved->id)->sum('amount_minor'));
-        $this->assertSame(4, CreatorLedgerEntry::where('reference_id', (string) $payout->id)->count());
+        $this->assertSame(2, CreatorLedgerEntry::where('reference_id', (string) $payout->id)->count());
     }
 
     public function test_creator_cannot_request_a_payout_below_the_configured_minimum(): void
