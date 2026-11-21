@@ -5,6 +5,7 @@
     <div class="eyebrow">Área pessoal</div>
     <h1 class="page-title">Olá, {{ auth()->user()->name }}.</h1>
     <p class="muted">A tua biblioteca e o teu espaço de criador.</p>
+    <p><a class="btn secondary" href="{{ route('purchases.index') }}">Consultar histórico de compras</a></p>
 
     <section class="panel">
         <div class="row">
@@ -101,7 +102,7 @@
                 <div class="field"><label>Imagem de pré-visualização</label><input type="file" name="preview" accept=".jpg,.jpeg,.png,.webp" required></div>
                 <div class="field"><label>Declaração de direitos</label><select name="rights_basis" required><option value="owner">Sou titular dos direitos</option><option value="licensed">Tenho licença para distribuir</option><option value="authorized">Tenho autorização do titular</option></select></div>
                 <label class="muted"><input type="checkbox" name="accept_rights" value="1" required> Confirmo que tenho os direitos ou autorização necessários para publicar e comercializar este conteúdo.</label>
-                <p><button class="btn accent">Publicar conteúdo</button></p>
+                <p><button class="btn accent">Adicionar à biblioteca privada</button></p>
             </form>
         </section>
     @endif
