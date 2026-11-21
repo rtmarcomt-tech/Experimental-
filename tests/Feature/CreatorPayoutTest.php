@@ -10,7 +10,9 @@ use App\Models\User;
 use App\Services\Payments\CreatorPayoutFinalizer;
 use App\Services\Payments\CreatorPayoutRequestService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Config;
+use Illuminate\Support\Facades\Http;
 use Tests\TestCase;
 
 class CreatorPayoutTest extends TestCase
