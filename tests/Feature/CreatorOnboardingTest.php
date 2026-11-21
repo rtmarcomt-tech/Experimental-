@@ -22,7 +22,7 @@ class CreatorOnboardingTest extends TestCase
 
     public function test_user_can_submit_creator_application_and_starts_pending(): void
     {
-        $user = User::create(['name' => 'Creator One', 'email' => 'creator@example.test', 'password' => 'password-long-enough']);
+        $user = User::create(['name' => 'Creator One', 'email' => 'creator@example.test', 'password' => 'password-long-enough', 'account_type' => 'creator']);
         Sanctum::actingAs($user);
 
         $this->postJson('/api/creator/application', [
@@ -121,9 +121,10 @@ class CreatorOnboardingTest extends TestCase
             'name' => 'New User',
             'email' => 'new-user@example.test',
             'password' => 'long-password-123',
+            'account_type' => 'user',
             'is_admin' => true,
         ])->assertCreated();
 
-        $this->assertDatabaseHas('users', ['id' => $response->json('user.id'), 'is_admin' => false]);
+        $this->assertDatabaseHas('users', ['id' => $response->json('user.id'), 'is_admin' => false, 'account_type' => 'user']);
     }
 }
