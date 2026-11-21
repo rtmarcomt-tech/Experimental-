@@ -10,7 +10,7 @@ class CreatorPayout extends Model
     protected $fillable = [
         'creator_profile_id', 'requested_by', 'amount_minor', 'currency',
         'recipient_email', 'status', 'idempotency_key', 'paypal_batch_id',
-        'paypal_item_id', 'failure_reason', 'requested_at', 'submitted_at', 'completed_at',
+        'paypal_item_id', 'paypal_sender_item_id', 'failure_reason', 'requested_at', 'submitted_at', 'completed_at',
     ];
 
     protected function casts(): array
