@@ -443,7 +443,7 @@ class MarketplaceController extends Controller
     {
         $grant = MediaAccessGrant::where('buyer_id',$request->user()->id)->where('digital_media_id',$media)
             ->whereNull('revoked_at')->with('digitalMedia')->firstOrFail();
-        abort_unless($grant->digitalMedia && $grant->digitalMedia->status === 'published',404);
+        abort_unless($grant->digitalMedia && $grant->digitalMedia->status === 'published' && $grant->digitalMedia->creatorProfile?->canSell(),404);
         $asset = $grant->digitalMedia->assets()->where('purpose','original')->latest('id')->firstOrFail();
         $disk = Storage::disk($asset->disk);
         abort_unless($disk->exists($asset->object_key),503,'Ficheiro temporariamente indisponível.');
