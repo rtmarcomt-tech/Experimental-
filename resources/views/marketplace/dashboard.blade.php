@@ -1,13 +1,106 @@
 @extends('layouts.app')
 @section('title','A minha área — Atelier')
 @section('content')
-<div class="wrap page"><div class="eyebrow">Área pessoal</div><h1 class="page-title">Olá, {{ auth()->user()->name }}.</h1><p class="muted">A tua biblioteca e o teu espaço de criador.</p>
-<section class="panel"><div class="row"><div><div class="eyebrow">Perfil de criador</div><h2 style="font:27px Georgia,serif;margin:8px 0">{{ $profile?->public_name ?? 'Ainda não tens perfil de criador' }}</h2><span class="pill">{{ $profile?->status ?? 'não iniciado' }}</span></div>@if(!$profile || $profile->status==='rejected')<a href="#candidatura" class="btn accent">Candidatar-me como criador</a>@endif</div>
-@if($profile && $profile->status!=='approved')<div class="notice">A candidatura está {{ $profile->status==='pending'?'pendente de validação':'em preparação' }}. A publicação de conteúdos fica disponível após aprovação administrativa.</div>@endif
-@if($profile && $profile->status==='approved')<h3 style="font:22px Georgia,serif;margin-top:28px">Os meus conteúdos</h3><div class="row"><span class="muted">{{ $media->count() }} conteúdos</span><a href="#novo-conteudo" class="btn">Publicar conteúdo</a></div>@if($media->count())<table class="table"><thead><tr><th>Título</th><th>Formato</th><th>Estado</th><th>Visibilidade</th></tr></thead><tbody>@foreach($media as $item)<tr><td>{{ $item->title }}</td><td>{{ $item->type }}</td><td>{{ $item->status }}</td><td>{{ $item->visibility }}</td></tr>@endforeach</tbody></table>@else<div class="empty">Ainda não publicaste conteúdos.</div>@endif@endif
-</section>
-@if(!$profile || $profile->status==='rejected')<section class="panel" id="candidatura"><div class="eyebrow">Tornar-me criador</div><h2 style="font:27px Georgia,serif">Candidatura de criador</h2><p class="muted">Preenche os dados e envia um documento de identificação. A equipa de administração validará a conta antes de permitir publicações.</p><form method="post" action="{{ route('creator.apply') }}" enctype="multipart/form-data">@csrf<div class="form-grid"><div class="field"><label>Nome público</label><input name="public_name" required maxlength="120"></div><div class="field"><label>País (código ISO de 2 letras)</label><input name="country_code" value="PT" maxlength="2" required></div></div><div class="field"><label>Biografia</label><textarea name="bio" maxlength="2000"></textarea></div><div class="field"><label>Documento de identificação (PDF, JPG ou PNG)</label><input type="file" name="identity_document" accept=".pdf,.jpg,.jpeg,.png" required></div><label class="muted"><input type="checkbox" name="accept_creator_terms" value="1" required> Confirmo que os dados submetidos são verdadeiros e aceito os termos de candidatura.</label><p><button class="btn accent">Enviar candidatura</button></p></form></section>@endif
-@if($profile && $profile->status==='approved')<section class="panel" id="novo-conteudo"><div class="eyebrow">Publicação</div><h2 style="font:27px Georgia,serif">Adicionar novo conteúdo</h2><form method="post" action="{{ route('creator.media.store') }}" enctype="multipart/form-data">@csrf<div class="form-grid"><div class="field"><label>Formato</label><select name="type"><option value="photo">Fotografia</option><option value="video">Vídeo</option></select></div><div class="field"><label>Título</label><input name="title" required maxlength="180"></div></div><div class="field"><label>Descrição</label><textarea name="description"></textarea></div><div class="form-grid"><div class="field"><label>Visibilidade</label><select name="visibility"><option value="free">Gratuito</option><option value="paid">Pago</option></select></div><div class="field"><label>Preço em euros (apenas para pago)</label><input type="number" name="price_eur" min="0.01" step="0.01"></div></div><div class="field"><label>Ficheiro original</label><input type="file" name="original" required></div><div class="field"><label>Imagem de pré-visualização</label><input type="file" name="preview" accept=".jpg,.jpeg,.png,.webp" required></div><div class="field"><label>Declaração de direitos</label><select name="rights_basis" required><option value="owner">Sou titular dos direitos</option><option value="licensed">Tenho licença para distribuir</option><option value="authorized">Tenho autorização do titular</option></select></div><label class="muted"><input type="checkbox" name="accept_rights" value="1" required> Confirmo que tenho os direitos ou autorização necessários para publicar e comercializar este conteúdo.</label><p><button class="btn accent">Publicar conteúdo</button></p></form></section>@endif
-<section><div class="section-head"><div><div class="eyebrow">Biblioteca</div><h2>Os meus conteúdos adquiridos</h2></div></div>@if($library->count())<div class="grid">@foreach($library as $grant)<div class="product"><div class="placeholder">{{ strtoupper($grant->digitalMedia->type) }}</div><div class="product-info"><h3>{{ $grant->digitalMedia->title }}</h3><div class="muted">{{ $grant->digitalMedia->creatorProfile->public_name }}</div><a class="btn secondary" style="margin-top:14px" href="{{ route('library.download',$grant->digital_media_id) }}">Transferir ficheiro</a></div></div>@endforeach</div>@else<div class="empty">A tua biblioteca ainda está vazia. Explora o catálogo para descobrir conteúdos.</div>@endif</section>
+<div class="wrap page">
+    <div class="eyebrow">Área pessoal</div>
+    <h1 class="page-title">Olá, {{ auth()->user()->name }}.</h1>
+    <p class="muted">A tua biblioteca e o teu espaço de criador.</p>
+
+    <section class="panel">
+        <div class="row">
+            <div>
+                <div class="eyebrow">Perfil de criador</div>
+                <h2 style="font:27px Georgia,serif;margin:8px 0">{{ $profile?->public_name ?? 'Ainda não tens perfil de criador' }}</h2>
+                <span class="pill">{{ $profile?->status ?? 'não iniciado' }}</span>
+            </div>
+            @if(!$profile || $profile->status === 'rejected')
+                <a href="#candidatura" class="btn accent">Candidatar-me como criador</a>
+            @endif
+        </div>
+
+        @if($profile && $profile->status !== 'approved')
+            <div class="notice">A candidatura está {{ $profile->status === 'pending' ? 'pendente de validação' : 'em preparação' }}. A publicação de conteúdos fica disponível após aprovação administrativa.</div>
+        @endif
+
+        @if($profile && $profile->status === 'approved')
+            <h3 style="font:22px Georgia,serif;margin-top:28px">Os meus conteúdos</h3>
+            <div class="row"><span class="muted">{{ $media->count() }} conteúdos</span><a href="#novo-conteudo" class="btn">Publicar conteúdo</a></div>
+            @if($media->count())
+                <table class="table">
+                    <thead><tr><th>Título</th><th>Formato</th><th>Estado</th><th>Visibilidade</th></tr></thead>
+                    <tbody>
+                    @foreach($media as $item)
+                        <tr><td>{{ $item->title }}</td><td>{{ $item->type }}</td><td>{{ $item->status }}</td><td>{{ $item->visibility }}</td></tr>
+                    @endforeach
+                    </tbody>
+                </table>
+            @else
+                <div class="empty">Ainda não publicaste conteúdos.</div>
+            @endif
+        @endif
+    </section>
+
+    @if(!$profile || $profile->status === 'rejected')
+        <section class="panel" id="candidatura">
+            <div class="eyebrow">Tornar-me criador</div>
+            <h2 style="font:27px Georgia,serif">Candidatura de criador</h2>
+            <p class="muted">Preenche os dados e envia um documento de identificação. A equipa de administração validará a conta antes de permitir publicações.</p>
+            <form method="post" action="{{ route('creator.apply') }}" enctype="multipart/form-data">
+                @csrf
+                <div class="form-grid">
+                    <div class="field"><label>Nome público</label><input name="public_name" required maxlength="120"></div>
+                    <div class="field"><label>País (código ISO de 2 letras)</label><input name="country_code" value="PT" maxlength="2" required></div>
+                </div>
+                <div class="field"><label>Biografia</label><textarea name="bio" maxlength="2000"></textarea></div>
+                <div class="field"><label>Documento de identificação (PDF, JPG ou PNG)</label><input type="file" name="identity_document" accept=".pdf,.jpg,.jpeg,.png" required></div>
+                <label class="muted"><input type="checkbox" name="accept_creator_terms" value="1" required> Confirmo que os dados submetidos são verdadeiros e aceito os termos de candidatura.</label>
+                <p><button class="btn accent">Enviar candidatura</button></p>
+            </form>
+        </section>
+    @endif
+
+    @if($profile && $profile->status === 'approved')
+        <section class="panel" id="novo-conteudo">
+            <div class="eyebrow">Publicação</div>
+            <h2 style="font:27px Georgia,serif">Adicionar novo conteúdo</h2>
+            <form method="post" action="{{ route('creator.media.store') }}" enctype="multipart/form-data">
+                @csrf
+                <div class="form-grid">
+                    <div class="field"><label>Formato</label><select name="type"><option value="photo">Fotografia</option><option value="video">Vídeo</option></select></div>
+                    <div class="field"><label>Título</label><input name="title" required maxlength="180"></div>
+                </div>
+                <div class="field"><label>Descrição</label><textarea name="description"></textarea></div>
+                <div class="form-grid">
+                    <div class="field"><label>Visibilidade</label><select name="visibility"><option value="free">Gratuito</option><option value="paid">Pago</option></select></div>
+                    <div class="field"><label>Preço em euros (apenas para pago)</label><input type="number" name="price_eur" min="0.01" step="0.01"></div>
+                </div>
+                <div class="field"><label>Ficheiro original</label><input type="file" name="original" required></div>
+                <div class="field"><label>Imagem de pré-visualização</label><input type="file" name="preview" accept=".jpg,.jpeg,.png,.webp" required></div>
+                <div class="field"><label>Declaração de direitos</label><select name="rights_basis" required><option value="owner">Sou titular dos direitos</option><option value="licensed">Tenho licença para distribuir</option><option value="authorized">Tenho autorização do titular</option></select></div>
+                <label class="muted"><input type="checkbox" name="accept_rights" value="1" required> Confirmo que tenho os direitos ou autorização necessários para publicar e comercializar este conteúdo.</label>
+                <p><button class="btn accent">Publicar conteúdo</button></p>
+            </form>
+        </section>
+    @endif
+
+    <section>
+        <div class="section-head"><div><div class="eyebrow">Biblioteca</div><h2>Os meus conteúdos adquiridos</h2></div></div>
+        @if($library->count())
+            <div class="grid">
+                @foreach($library as $grant)
+                    <div class="product">
+                        <div class="placeholder">{{ strtoupper($grant->digitalMedia->type) }}</div>
+                        <div class="product-info">
+                            <h3>{{ $grant->digitalMedia->title }}</h3>
+                            <div class="muted">{{ $grant->digitalMedia->creatorProfile->public_name }}</div>
+                            <a class="btn secondary" style="margin-top:14px" href="{{ route('library.download',$grant->digital_media_id) }}">Transferir ficheiro</a>
+                        </div>
+                    </div>
+                @endforeach
+            </div>
+        @else
+            <div class="empty">A tua biblioteca ainda está vazia. Explora o catálogo para descobrir conteúdos.</div>
+        @endif
+    </section>
 </div>
 @endsection
