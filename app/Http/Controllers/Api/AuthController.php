@@ -16,13 +16,13 @@ class AuthController extends Controller
         $data = $request->validate([
             'name' => ['required', 'string', 'max:120'],
             'email' => ['required', 'email:rfc', 'max:255', 'unique:users,email'],
-            'password' => ['required', 'string', 'min:12', 'max:128'],
+            'password' => ['required', 'string', 'min:12', 'max:128'],\n            'account_type' => ['required', 'in:user,creator'],
         ]);
 
-        $user = User::create($data);
+        $user = User::create([\n            'name' => $data['name'],\n            'email' => $data['email'],\n            'password' => $data['password'],\n            'account_type' => $data['account_type'],\n        ]);
 
         return response()->json([
-            'user' => ['id' => $user->id, 'name' => $user->name, 'email' => $user->email],
+            'user' => ['id' => $user->id, 'name' => $user->name, 'email' => $user->email, 'account_type' => $user->account_type],
             'token' => $user->createToken('api')->plainTextToken,
         ], 201);
     }
