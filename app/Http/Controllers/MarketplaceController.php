@@ -145,7 +145,11 @@ class MarketplaceController extends Controller
             $captured = Order::query()->where('status', 'captured');
             $stats = [
                 'creators' => CreatorProfile::count(),
+                'approved_creators' => CreatorProfile::where('status','approved')->count(),
                 'pending' => CreatorProfile::where('status','pending')->count(),
+                'rejected_creators' => CreatorProfile::where('status','rejected')->count(),
+                'active_accounts' => User::where('account_status','active')->where('is_admin',false)->count(),
+                'suspended_accounts' => User::where('account_status','suspended')->where('is_admin',false)->count(),
                 'published' => DigitalMedia::where('status','published')->count(),
                 'buyers' => User::where('is_admin',false)->count(),
                 'orders' => Order::count(),
