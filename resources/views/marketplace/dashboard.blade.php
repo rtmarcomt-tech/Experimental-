@@ -1,5 +1,5 @@
 @extends('layouts.app')
-@section('title','A minha área — Atelier')
+@section('title','A minha área — Marketplace')
 @section('content')
 <div class="wrap page">
     <div class="eyebrow">Área pessoal</div>
