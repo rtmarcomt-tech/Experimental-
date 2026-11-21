@@ -15,7 +15,7 @@ class AdminCreatorPayoutController extends Controller
     {
         $payout = DB::transaction(function () use ($payoutId): CreatorPayout {
             $payout = CreatorPayout::whereKey($payoutId)->lockForUpdate()->firstOrFail();
-            abort_unless(in_array($payout->status, ['requested', 'submission_unknown'], true), 409);
+            abort_unless(in_array($payout->status, ['requested', 'submission_unknown'], true) || ($payout->status === 'processing' && ! $payout->paypal_batch_id), 409);
             $payout->update(['status' => 'processing', 'failure_reason' => null]);
             return $payout->fresh();
         });
