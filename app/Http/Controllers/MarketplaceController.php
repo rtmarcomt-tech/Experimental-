@@ -11,6 +11,7 @@ use App\Models\DigitalMedia;
 use App\Models\MediaRightsDeclaration;
 use App\Models\User;
 use App\Models\Order;
+use App\Models\OrderItem;
 use App\Domain\Finance\CommissionCalculator;
 use App\Services\Payments\PayPalClient;
 use App\Services\Payments\CaptureFinalizer;
