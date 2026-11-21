@@ -170,7 +170,8 @@ class MarketplaceController extends Controller
             $library = MediaAccessGrant::where('buyer_id', $user->id)->whereNull('revoked_at')
                 ->with('digitalMedia.creatorProfile')->latest('granted_at')->get();
             return view('marketplace.buyer-dashboard', compact('library'));
-        }\n        $media = $profile ? $profile->media()->with('assets')->latest()->get() : collect();
+        }
+        $media = $profile ? $profile->media()->with('assets')->latest()->get() : collect();
         $creatorPayouts = $profile ? CreatorPayout::where('creator_profile_id', $profile->id)->latest('requested_at')->limit(10)->get() : collect();
         $library = MediaAccessGrant::where('buyer_id',$user->id)->whereNull('revoked_at')
             ->with('digitalMedia.creatorProfile')->latest('granted_at')->get();
